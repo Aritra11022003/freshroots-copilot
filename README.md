@@ -1,5 +1,9 @@
 # Freshroots Replenishment Copilot
 
+[![Replenishment run](https://github.com/Aritra11022003/freshroots-copilot/actions/workflows/run.yml/badge.svg)](https://github.com/Aritra11022003/freshroots-copilot/actions/workflows/run.yml)
+
+**Live app:** https://freshroots-copilot.streamlit.app/
+
 Twice a week, a scheduled job reads sales and stock from Supabase, checks the data, applies Raghav's 5 written rules to every SKU, and saves one recommendation per SKU. Raghav approves, overrides or rejects each one in a web app. Procurement downloads only the approved rows as a CSV and imports it into Zoho Inventory. **The system never places an order.**
 
 The component map is at `docs/component_map.png`, and the data mapping and every assumption are in `docs/data_mapping.md`.
