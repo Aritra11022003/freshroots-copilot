@@ -1,0 +1,7 @@
+{"code": 0, "message": "success",
+ "purchaseorders": [
+  {"purchaseorder_id": "7001", "purchaseorder_number": "PO-00001", "reference_number": "FRC-1-FRS",
+   "vendor_id": "5001", "vendor_name": "Freshroots Supplier (demo)", "status": "draft", "received_status": "", "total": 0},
+  {"purchaseorder_id": "7002", "purchaseorder_number": "PO-00002", "reference_number": "",
+   "vendor_id": "5001", "vendor_name": "Freshroots Supplier (demo)", "status": "partially_received", "received_status": "partially_received", "total": 0}],
+ "page_context": {"page": 1, "per_page": 200, "has_more_page": false}}

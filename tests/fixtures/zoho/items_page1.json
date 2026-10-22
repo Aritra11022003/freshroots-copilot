@@ -1,0 +1,4 @@
+{"code": 0, "message": "success",
+ "items": [{"item_id": "9001", "name": "Freshroots Mango Drink 200ml", "sku": "SKU001", "status": "active"},
+           {"item_id": "9002", "name": "Freshroots Oats Cookies 150g", "sku": "SKU002", "status": "active"}],
+ "page_context": {"page": 1, "per_page": 200, "has_more_page": true}}

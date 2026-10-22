@@ -1,0 +1,7 @@
+{"code": 0, "message": "success",
+ "purchaseorder": {"purchaseorder_id": "7002", "purchaseorder_number": "PO-00002", "status": "partially_received",
+   "vendor_id": "5001", "reference_number": "",
+   "line_items": [{"line_item_id": "8001", "item_id": "9001", "name": "Freshroots Mango Drink 200ml", "sku": "SKU001",
+                   "quantity": 500, "quantity_received": 200, "purchase_rate": 0},
+                  {"line_item_id": "8002", "item_id": "9003", "name": "Freshroots Brown Rice 1kg", "sku": "SKU003",
+                   "quantity": 300, "quantity_received": 0, "purchase_rate": 0}]}}
