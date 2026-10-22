@@ -48,8 +48,8 @@ class Config:
 # change goes through code review; a changed value clears its sign-off (see sync_assumptions).
 ASSUMPTION_HELP = {
     "include_on_order_in_cover":
-        "Stock used for weeks-of-cover includes stock already on order. Today there is no "
-        "on-order feed, so on_order = 0 for every SKU (DEFAULT).",
+        "Stock used for weeks-of-cover includes stock already on order. With ZOHO_ENABLED, on-order "
+        "comes from Zoho open purchase orders (drafts included); otherwise on_order = 0 (DEFAULT).",
     "festival_uplift_applies_to_high_demand_check":
         "If false, the +25% festival uplift only raises expected demand (cover). The 4w-vs-12w "
         "high-demand check uses raw sales.",
