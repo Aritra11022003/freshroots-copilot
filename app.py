@@ -35,6 +35,12 @@ def get_database():
         from copilot.seed import seed
         db = FakeDB()
         seed(db)
+        if zoho_enabled() and not missing_keys():      # demo + Zoho: reuse the existing item mapping
+            try:
+                from copilot.zoho_sync import setup_mapping
+                setup_mapping(db, ZohoClient.from_settings(settings()))
+            except ZohoError:
+                pass
         return db
     from copilot.db import get_db
     return get_db()
