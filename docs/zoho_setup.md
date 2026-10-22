@@ -17,6 +17,11 @@ This takes about 10 minutes. Steps 4–5 have a **10-minute clock**: the grant c
 2. Click **Get Started** (or **Add Client**), choose **Self Client**, then **Create**, then **OK**.
 3. Open the **Client Secret** tab. You'll see a **Client ID** and a **Client Secret**.
 
+## Easiest path: one command
+After steps 1–2, run `.venv/bin/python scripts/zoho_connect.py`. It asks for the Client ID, Client Secret,
+Organization ID and a fresh grant code (all hidden), writes the `ZOHO_*` lines into `.env`, gets the refresh
+token and runs the read-only check. Steps 3–6 below are the manual equivalent.
+
 ## 3. Put the first values in `.env`
 Add these lines to the project's `.env` file, below the Supabase lines:
 
