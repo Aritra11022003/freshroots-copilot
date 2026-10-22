@@ -18,6 +18,7 @@ from .db import REC_COLUMNS, now_iso
 from .engine import run_rules, sales_end_week, sku_averages, standard_qty_default
 from .service import assumptions_signed, signed_keys, sync_assumptions
 from .validate import MISSING_STD_QTY, validate
+from .zoho_config import zoho_enabled
 
 IST = ZoneInfo("Asia/Kolkata")
 SEED_TABLES = ["skus", "weekly_sales", "inventory", "calendar", "distributors"]
@@ -36,7 +37,10 @@ def _json_safe(v):
 
 
 def run_pipeline(db, run_date: str | None = None, triggered_by: str = "manual",
-                 allow_defaults: bool = False, cfg: Config | None = None) -> dict:
+                 allow_defaults: bool = False, cfg: Config | None = None,
+                 on_order_provider=None) -> dict:
+    """on_order_provider(db) -> ({sku: qty}, meta). Defaults to Zoho when ZOHO_ENABLED is true,
+    otherwise None (on_order stays the engine default, exactly as before)."""
     cfg = cfg or Config.load()
     run_date = run_date or today_ist()
     started = now_iso()
@@ -51,6 +55,31 @@ def run_pipeline(db, run_date: str | None = None, triggered_by: str = "manual",
             notes.append("UNSIGNED ASSUMPTIONS: not for procurement")
 
         tables = {t: db.fetch_all(t) for t in SEED_TABLES}
+
+        # [C11] On-order stock from Zoho (only when ZOHO_ENABLED). A failed sync BLOCKS the
+        # run: stale on-order numbers cause double orders, so there is no silent fallback.
+        if on_order_provider is None and zoho_enabled():
+            from .zoho_sync import zoho_on_order_provider
+            on_order_provider = zoho_on_order_provider
+        if on_order_provider is not None:
+            try:
+                on_order, meta = on_order_provider(db)
+            except Exception as e:
+                gap = {"sku": None, "issue": f"Zoho on-order sync failed: {e}",
+                       "fix_needed": "Check the Zoho page (connection / secrets), then Run now. Blocked so "
+                                     "stale on-order data cannot cause double orders."}
+                run = _run_row(run_date, started, "blocked", triggered_by, signed,
+                               notes + ["on_order source: Zoho, SYNC FAILED; no recommendations written"])
+                run_id = db.record_run(run, [], [gap])
+                return {"run_id": run_id, "status": "blocked", "gaps": [gap], "recommendations": 0,
+                        "notes": run["notes"]}
+            inv = tables["inventory"].copy()
+            inv["units_on_order"] = 0
+            first = ~inv["sku_id"].duplicated()             # one row per SKU carries the qty
+            inv.loc[first, "units_on_order"] = inv.loc[first, "sku_id"].map(on_order).fillna(0).astype(int)
+            tables["inventory"] = inv
+            notes.append(f"on_order source: Zoho (synced {meta['synced_at'][:16]}Z; "
+                         f"{meta['skus_with_open_pos']} SKUs with open POs)")
 
         # [C3] validation gate
         gaps = validate(tables, run_date, cfg)

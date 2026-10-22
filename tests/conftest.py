@@ -11,6 +11,12 @@ from copilot.seed import load_seed_rows  # noqa: E402
 RUN_DATE = "2026-10-22"   # Thursday, W43; last complete week W42; October = festival
 
 
+@pytest.fixture(autouse=True)
+def zoho_off_by_default(monkeypatch):
+    """Tests never touch live Zoho: the flag is off unless a test turns it on."""
+    monkeypatch.setenv("ZOHO_ENABLED", "false")
+
+
 @pytest.fixture
 def seed_rows():
     return load_seed_rows()

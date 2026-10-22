@@ -25,6 +25,7 @@ ORDER = {
     "inventory": ("sku_id", "location"),
     "weekly_sales": ("sku_id", "week"),
     "assumptions": ("key",),
+    "zoho_items": ("sku_id",),
 }
 PRIMARY_KEYS = {
     "skus": ("sku_id",),
@@ -33,6 +34,7 @@ PRIMARY_KEYS = {
     "inventory": ("sku_id", "location"),
     "weekly_sales": ("sku_id", "week"),
     "assumptions": ("key",),
+    "zoho_items": ("sku_id",),
 }
 RUN_COLUMNS = ["run_date", "started_at", "finished_at", "status", "triggered_by",
                "assumptions_signed", "notes"]
@@ -95,7 +97,7 @@ class SupabaseDB:
 class FakeDB:
     """In-memory stand-in with the same interface, for tests."""
 
-    APPEND_ONLY = {"runs", "decisions"}
+    APPEND_ONLY = {"runs", "decisions", "zoho_po_pushes"}
 
     def __init__(self, tables: dict[str, list[dict]] | None = None):
         self.tables: dict[str, list[dict]] = {k: copy.deepcopy(v) for k, v in (tables or {}).items()}
