@@ -69,7 +69,8 @@ def load_mapping(db) -> pd.DataFrame:
 # ---- Phase 3: on-order = ordered - received, from POs not yet fully received -----------
 def line_open_qty(li: dict) -> float:
     ordered = float(li.get("quantity") or 0)
-    received = float(li.get("quantity_received") or 0)
+    # Zoho has two receive paths (purchase receives and "mark as received"); confirmed live.
+    received = max(float(li.get("quantity_received") or 0), float(li.get("quantity_marked_as_received") or 0))
     cancelled = float(li.get("quantity_cancelled") or 0)
     return max(ordered - received - cancelled, 0.0)
 

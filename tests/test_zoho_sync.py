@@ -106,3 +106,18 @@ def test_test_and_demo_drafts_never_count_as_on_order():
            {"purchaseorder_id": "8", "status": "draft", "reference_number": "FRC-DEMO-1-FRS",
             "line_items": [{"item_id": "a", "quantity": 100}]}]
     assert compute_on_order(pos, {"a": "SKU001"}) == ({}, {})
+
+
+def test_marked_as_received_also_reduces_on_order():
+    pos = [{"purchaseorder_id": "1", "status": "open", "line_items": [
+        {"item_id": "a", "quantity": 100, "quantity_received": 0, "quantity_marked_as_received": 60}]}]
+    assert compute_on_order(pos, {"a": "SKU001"})[0] == {"SKU001": 40}
+
+
+def test_recorded_live_draft_po_has_the_fields_we_use():
+    import json
+    from pathlib import Path
+    po = json.loads((Path(__file__).parent / "fixtures/zoho/recorded/purchaseorder_detail.json").read_text())
+    assert po["status"] == "draft" and po["reference_number"].startswith("FRC-TEST-")
+    li = po["line_items"][0]
+    assert {"item_id", "quantity", "quantity_received", "quantity_cancelled", "sku"} <= set(li)
