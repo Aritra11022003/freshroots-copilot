@@ -114,3 +114,68 @@ Every phase must keep these 54 (+1) tests passing.
 3. **The cron needs Zoho secrets too** (§7).
 4. **Zoho field names** (PO status values, `quantity`, received quantity, the `reference_number` filter on the list endpoint) will be confirmed from Zoho's official Inventory API docs and one read-only call in Phase 1, before any code depends on them.
 5. **Local `git push`:** your global git credential helper points to a deleted `gh` binary. Pushing the branch will need `gh auth setup-git`, or the one-off workaround used last time.
+
+---
+
+# Final report (2026-10-22)
+
+## 1. Files changed or added
+| File | Change | Why |
+|---|---|---|
+| `copilot/zoho_client.py` | new | Zoho API client: refresh-token auth, refresh on expiry/401, `organization_id` on every call, pagination, backoff on 429/5xx, 30 s timeouts, `ZohoError`. GET and POST only |
+| `copilot/zoho_config.py` | new | `ZOHO_*` settings from env/.env or `st.secrets`; `zoho_enabled()` flag (default false); missing-key report |
+| `copilot/zoho_sync.py` | new | Phase 2 vendor/item mapping (idempotent) and Phase 3 `sync_on_order()` (C11) |
+| `copilot/zoho_push.py` | new | Phase 4 `push_drafts()` (C12): one draft per vendor, Zoho-side reference check, retry failed, push log |
+| `copilot/pipeline.py` | edit | Optional `on_order_provider`; when the flag is on, Zoho on-order is merged into the inventory frame. A sync failure blocks the run |
+| `copilot/db.py` | edit | `zoho_items` added to the paging order and primary keys; `zoho_po_pushes` append-only in `FakeDB` |
+| `app.py` | edit | New **Zoho** page; on-order source line on Queues; demo mode reuses the Zoho mapping |
+| `supabase/migrations/002_zoho.sql` | new | `zoho_items`, `zoho_on_order`, `zoho_po_pushes` (append-only), RLS |
+| `scripts/zoho_connect.py` | new | One-step wizard: 4 hidden prompts, refresh token, `.env`, read-only check |
+| `scripts/zoho_get_token.py` | new | Manual grant code → refresh token |
+| `scripts/zoho_check.py` | new | Read-only counts and one redacted PO; `--record` saves fixtures |
+| `scripts/zoho_setup.py` | new | Creates the vendor and items once; a re-run creates 0 |
+| `scripts/zoho_live_test.py` | new | Live push and duplicate check against the demo org, without touching real queues |
+| `tests/test_zoho_*.py`, `tests/zoho_fakes.py`, `tests/zoho_fake_api.py`, `tests/fixtures/zoho/**` | new | Mocked HTTP and fake-Zoho tests, plus recorded redacted real PO |
+| `tests/conftest.py`, `tests/test_app.py` | edit | Flag forced off in tests; Zoho page smoke tests |
+| `.github/workflows/run.yml` | edit | Passes `ZOHO_*` secrets to the cron run |
+| `requirements.txt` | edit | `requests` |
+| `README.md`, `docs/zoho_setup.md` | edit / new | Zoho setup, TOML secrets example, free-plan limits |
+
+`engine.py`, `validate.py`, `backtest.py` and the `config.json` thresholds are **untouched**.
+
+## 2. Tests
+- **Baseline:** 54 passed, 1 skipped (55 with Supabase env).
+- **Final:** **88 passed, 2 skipped.** The two skipped tests are the Supabase and Zoho live tests. All 54 baseline tests still pass, and the Zoho live test passes with `ZOHO_LIVE_TESTS=1`.
+
+## 3. `zoho_check.py`
+- **First run (empty org):** 0 items, 0 contacts, 0 POs.
+- **After the setup and the test push:** 15 items, 1 vendor, 2 POs, all `draft`, with `received_status` `to_be_received`.
+- **Line-item fields confirmed live:** `quantity`, `quantity_received`, `quantity_marked_as_received`, `quantity_cancelled`, `quantity_intransit`, `quantity_billed`, `item_id`, `sku`.
+
+## 4. Items and vendors created
+- The vendor "Freshroots Supplier (demo)" was created.
+- 15 items were created, SKU001–SKU015, each with our SKU code in the Zoho `sku` field.
+- A re-run reported "already existed" and **0 created**.
+
+## 5. On-order sync
+- Live run 3 on Supabase with Zoho on: ok, "on_order source: Zoho … 0 SKUs with open POs".
+- 15 snapshot rows were written.
+- Recommendations are **identical** to run 2 (Zoho off), because the only POs in the org are test/demo drafts, which are excluded.
+
+## 6. Test pushes
+| Push | Reference | Result |
+|---|---|---|
+| Script, 1st | `FRC-TEST-16-FRS` | **created PO-00001** (draft): SKU001×750, SKU006×40 (override). The rejected and undecided rows were excluded |
+| Script, 2nd | `FRC-TEST-16-FRS` | **skipped**, "Already in Zoho"; nothing created |
+| App (demo mode), 1st click | `FRC-DEMO-16-FRS` | **created PO-00002** (draft): SKU001×750, SKU003×300, SKU004×150, SKU011×500, SKU013×120 |
+| App, 2nd click | `FRC-DEMO-16-FRS` | **skipped**, showed PO-00002 |
+
+## 7. Assumptions to confirm with the instructor
+1. **One demo vendor** for all SKUs. `distributor_id` is customer-side, and there's no supplier column. Approved in Phase 0.
+2. **Drafts count as on-order.** A pushed but not-yet-issued draft must stop the next run re-ordering the same SKU. If procurement deletes a draft, it stops counting. `FRC-TEST-*` and `FRC-DEMO-*` drafts never count.
+3. **Received quantity** = max(`quantity_received`, `quantity_marked_as_received`). Zoho has both receive paths; both were confirmed on a live PO.
+4. **Open statuses:** draft, open, issued, partially_received, pending_approval, approved. Excluded: received (`received_status` = received), cancelled, closed. Only `draft` has been seen live.
+5. **Duplicate check:** the PO list endpoint documents no `reference_number` filter, so the copilot lists POs and matches the reference. That's fine at demo volume; at 1,000s of POs, add a date filter.
+6. **PO numbers** come from Zoho's auto-numbering (PO-00001…). We don't set `purchaseorder_number`.
+7. **Items** were created as `item_type=inventory`, `product_type=goods`, with rate and purchase_rate set to 0. Prices are left for procurement to fill in Zoho.
+8. **Deploy:** the live Streamlit app deploys from `main`. Instead of a separate branch deployment, `feature/zoho` was verified locally and live against the demo org, then merged with the flag **off**. With the flag off the app behaves identically (tested). Turning it on is just adding the secrets.

@@ -20,6 +20,8 @@ The component map is at `docs/component_map.png`, and the data mapping and every
 | C8 | Approve / override / reject | Buttons on **Queues** (`copilot/service.py`) |
 | C9 | Download draft POs | App page **Export** |
 | C10 | Backtest (kill gate) | `copilot/backtest.py`, app page **Backtest** |
+| C11 | On-order stock read from Zoho open POs | `copilot/zoho_sync.py` (`sync_on_order`), plugged into `run_pipeline()` |
+| C12 | Approved rows become **draft** POs in Zoho | `copilot/zoho_push.py` (`push_drafts`), app page **Zoho** |
 
 ---
 
@@ -84,6 +86,39 @@ Free tiers change. Check them before relying on this setup:
 
 ---
 
+
+## Zoho Inventory (draft POs + on-order stock)
+
+Zoho is behind a feature flag, `ZOHO_ENABLED` (default `false`). With the flag off the app behaves exactly as v1 and the CSV export is the path to Zoho. With it on:
+
+- **Every run** (cron or Run now) reads open purchase orders from Zoho. On-order per SKU is ordered minus received (and cancelled), and it counts toward weeks of cover. If the sync fails, the run is **blocked**; it never silently falls back to old numbers.
+- **The Zoho page** sends the latest run's approved and overridden rows to Zoho as **one draft PO per vendor**, with reference `FRC-<run_id>-<vendor>`. Before creating a PO it asks Zoho whether that reference already exists, so a second click or a restart can't create duplicates. Each attempt is logged in `zoho_po_pushes`. "Retry failed" re-sends only failed vendors.
+- **The copilot never issues, emails, receives, bills, cancels or deletes a PO.** Procurement reviews and issues the drafts inside Zoho.
+- **Vendor:** the data has no supplier column, so every SKU maps to one vendor, "Freshroots Supplier (demo)".
+
+**Setup:** follow [docs/zoho_setup.md](docs/zoho_setup.md), or run `python scripts/zoho_connect.py`, which asks for 4 values. Then:
+
+1. Run `supabase/migrations/002_zoho.sql` in the Supabase SQL editor.
+2. Run `python scripts/zoho_setup.py` to create the items and the vendor. It's safe to re-run.
+3. Add the secrets to GitHub Actions (the cron sync needs them) and to Streamlit.
+
+**Streamlit secrets (TOML), full example:**
+```toml
+SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY = "..."
+ZOHO_ENABLED = "true"
+ZOHO_CLIENT_ID = "..."
+ZOHO_CLIENT_SECRET = "..."
+ZOHO_REFRESH_TOKEN = "..."
+ZOHO_ORG_ID = "..."
+ZOHO_ACCOUNTS_URL = "https://accounts.zoho.in"
+ZOHO_API_BASE = "https://www.zohoapis.in/inventory/v1"
+```
+
+**Free-plan limits (checked 2026-10-22, [Zoho pricing comparison](https://www.zoho.com/us/inventory/pricing-comparison/)):** 20 purchase orders a month, 1,000 API calls a day, 1 user. One draft per vendor per run at 2 runs a week is about 8 POs a month. Check the current limits before going live.
+
+Drafts with references `FRC-TEST-*` (from `scripts/zoho_live_test.py`) and `FRC-DEMO-*` (from demo mode) never count as on-order stock.
+
 ## Using it
 
 | Who | Where | What |
@@ -116,7 +151,7 @@ The gate compares these against the engine's replayed action for the same SKU an
 ## Developer notes
 
 ```bash
-python -m pytest -q                      # 54 tests; the Supabase integration test runs only if env vars are set
+python -m pytest -q                      # 88 tests; Supabase / Zoho live tests run only when their env vars are set
 COPILOT_DEMO=1 streamlit run app.py      # the app on an in-memory DB seeded from data/raw (nothing saved)
 python -m copilot.backtest               # backtest against Supabase, saved to backtest_results
 ```
@@ -126,4 +161,4 @@ python -m copilot.backtest               # backtest against Supabase, saved to b
 - `record_run()` is a Postgres function, so the run row, its recommendations and its data gaps are written in one transaction. A partial output is never saved.
 - Rule thresholds live in `config.json`, so changing one is a code review.
 - `freshroots-rules-engine/` is the earlier prototype; its logic was ported into `copilot/engine.py`.
-- Out of scope for v1: placing orders, Zoho/SAP APIs, ML forecasting, any LLM call, and custom login.
+- Out of scope: issuing or placing orders (Zoho drafts only), SAP APIs, ML forecasting, any LLM call, and custom login.

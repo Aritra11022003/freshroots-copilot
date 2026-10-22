@@ -33,6 +33,14 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Zoho on-order sync (C11). Off unless the ZOHO_ENABLED secret is "true".
+          ZOHO_ENABLED: ${{ secrets.ZOHO_ENABLED }}
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORG_ID: ${{ secrets.ZOHO_ORG_ID }}
+          ZOHO_ACCOUNTS_URL: ${{ secrets.ZOHO_ACCOUNTS_URL }}
+          ZOHO_API_BASE: ${{ secrets.ZOHO_API_BASE }}
         run: >
           python run.py
           --triggered-by ${{ github.event_name == 'schedule' && 'cron' || 'manual' }}

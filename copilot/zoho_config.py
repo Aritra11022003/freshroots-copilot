@@ -18,11 +18,11 @@ def _get(key: str) -> str | None:
         load_dotenv()
     except ImportError:
         pass
-    val = os.getenv(key)
+    val = os.getenv(key) or None            # GitHub passes unset secrets as ""
     if val is None:
         try:
             import streamlit as st
-            val = st.secrets.get(key)
+            val = st.secrets.get(key) or None
         except Exception:                     # no secrets file outside Streamlit
             val = None
     if val is None:
