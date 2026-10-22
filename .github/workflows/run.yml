@@ -1,0 +1,39 @@
+# [C1] Scheduled run: Mon and Thu 07:00 IST (01:30 UTC), plus a manual trigger.
+# Running twice a week also keeps the free Supabase project from pausing.
+name: Replenishment run
+
+on:
+  schedule:
+    - cron: "30 1 * * 1,4"
+  workflow_dispatch:
+    inputs:
+      allow_defaults:
+        description: "Apply signed-off defaults (defaulted SKUs go to the exception queue)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: replenishment-run
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Tests
+        run: python -m pytest -q
+      - name: Run pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: >
+          python run.py
+          --triggered-by ${{ github.event_name == 'schedule' && 'cron' || 'manual' }}
+          ${{ inputs.allow_defaults && '--allow-defaults' || '' }}

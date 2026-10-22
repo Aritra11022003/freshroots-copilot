@@ -1,0 +1,42 @@
+{
+  "_comment": "Raghav's documented rules. Change thresholds here (code review), not in code. Changing a signed-off assumption clears its sign-off on the next run.",
+
+  "short_window_weeks": 4,
+  "long_window_weeks": 12,
+  "high_demand_ratio": 1.20,
+  "high_demand_multiplier": 1.5,
+
+  "normal_min_weeks": 6,
+  "normal_max_weeks": 14,
+  "perishable_min_weeks": 3,
+  "perishable_max_weeks": 4,
+  "high_perishability_values": ["High"],
+  "known_perishability_values": ["High", "Low"],
+
+  "festival_uplift": 0.25,
+  "festival_lookahead_weeks": 0,
+  "festival_uplift_applies_to_high_demand_check": false,
+
+  "include_on_order_in_cover": true,
+
+  "min_history_weeks": 12,
+  "distributor_drop_threshold": 0.30,
+  "distributor_baseline_weeks": 8,
+  "distributor_min_share": 0.05,
+
+  "standard_qty_default_weeks": 4,
+  "standard_qty_default_round_to": 10,
+
+  "override_reason_codes": [
+    "DISTRIBUTOR_SCHEME",
+    "COMPETITOR_ACTIVITY",
+    "NEW_LAUNCH",
+    "ONE_OFF_EVENT",
+    "SUPPLY_CONSTRAINT",
+    "DATA_ISSUE",
+    "OTHER"
+  ],
+
+  "backtest_gate": 0.80,
+  "backtest_min_history_weeks": 16
+}
