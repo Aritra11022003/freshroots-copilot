@@ -98,3 +98,11 @@ def test_flag_off_outputs_equal_baseline(db, seed_tables, monkeypatch):
         assert got[c].to_dict() == want[c].to_dict(), c
     assert "on_order = 0 for every SKU (DEFAULT" in res["notes"]
     assert db.fetch_all("zoho_on_order").empty
+
+
+def test_test_and_demo_drafts_never_count_as_on_order():
+    pos = [{"purchaseorder_id": "9", "status": "draft", "reference_number": "FRC-TEST-1-FRS",
+            "line_items": [{"item_id": "a", "quantity": 100}]},
+           {"purchaseorder_id": "8", "status": "draft", "reference_number": "FRC-DEMO-1-FRS",
+            "line_items": [{"item_id": "a", "quantity": 100}]}]
+    assert compute_on_order(pos, {"a": "SKU001"}) == ({}, {})

@@ -20,6 +20,8 @@ VENDOR_NAME = "Freshroots Supplier (demo)"
 # PO statuses whose unreceived quantity counts as stock on order. Drafts count too: a draft the
 # copilot pushed but procurement has not issued yet must stop the next run from re-ordering.
 OPEN_STATUSES = {"draft", "open", "issued", "partially_received", "pending_approval", "approved"}
+# Drafts made by the live integration test / demo mode never count as real stock on order.
+TEST_REF_PREFIXES = ("FRC-TEST-", "FRC-DEMO-")
 
 
 # ---- Phase 2: one vendor + one item per SKU, never duplicated ----------------------------
@@ -82,7 +84,7 @@ def compute_on_order(purchase_orders: list[dict], item_to_sku: dict[str, str]) -
     qty: dict[str, float] = {}
     pos: dict[str, set] = {}
     for po in purchase_orders:
-        if not is_open(po):
+        if not is_open(po) or str(po.get("reference_number", "")).startswith(TEST_REF_PREFIXES):
             continue
         for li in po.get("line_items", []):
             sku = item_to_sku.get(str(li.get("item_id"))) or li.get("sku")
@@ -100,7 +102,8 @@ def sync_on_order(db, z: ZohoClient) -> tuple[dict[str, int], dict]:
     any failure: the caller must BLOCK the run, never fall back to old numbers."""
     mapping = load_mapping(db)
     item_to_sku = dict(zip(mapping["zoho_item_id"].astype(str), mapping["sku_id"]))
-    listed = [p for p in z.list_purchase_orders() if is_open(p)]
+    listed = [p for p in z.list_purchase_orders()
+              if is_open(p) and not str(p.get("reference_number", "")).startswith(TEST_REF_PREFIXES)]
     full = [z.get_purchase_order(p["purchaseorder_id"]) for p in listed]
     qty, counts = compute_on_order(full, item_to_sku)
     synced_at = now_iso()

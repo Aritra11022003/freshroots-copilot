@@ -17,7 +17,9 @@ from copilot.backtest import PAST_DECISIONS_FORMAT, run_and_save
 from copilot.config import ASSUMPTION_HELP, Config
 from copilot.engine import ACTIONS, APPROVE_QUEUE, EXCEPTION_QUEUE
 from copilot.pipeline import run_pipeline
-from copilot.service import (banner, build_export, export_filename, latest_run, queue_frame,
+from copilot.zoho_client import ZohoClient, ZohoError
+from copilot.zoho_config import missing_keys, settings, zoho_enabled
+from copilot.service import (assumptions_signed, banner, build_export, export_filename, latest_run, queue_frame,
                              record_decision, sign_assumption)
 
 st.set_page_config(page_title="Freshroots Replenishment Copilot", page_icon="📦", layout="wide")
@@ -57,7 +59,7 @@ db = get_database()
 st.sidebar.title("📦 Replenishment Copilot")
 if DEMO:
     st.sidebar.warning("DEMO mode: in-memory data, nothing is saved.")
-page = st.sidebar.radio("Page", ["Queues", "Data gaps", "Sign-off", "Backtest", "Export", "History"])
+page = st.sidebar.radio("Page", ["Queues", "Data gaps", "Sign-off", "Backtest", "Export", "History", "Zoho"])
 
 email = viewer_email()
 if email:
@@ -107,6 +109,9 @@ if page == "Queues":
         st.info("No successful run yet. Use **Run now** in the sidebar.")
         st.stop()
     st.caption(f"Run {run['id']} · {run['run_date']} · {run['triggered_by']} · notes: {run['notes']}")
+    src = next((n for n in str(run["notes"]).split(" | ") if n.startswith("on_order")), "")
+    st.caption("📦 On-order source: " + (src.replace("on_order source: ", "") if "Zoho" in src
+                                         else "default 0 (no on-order feed; Zoho off)"))
 
     q = queue_frame(db, run["id"])
     f1, f2, f3 = st.columns(3)
@@ -275,3 +280,115 @@ elif page == "History":
         st.info("No decisions yet.")
     else:
         st.dataframe(dec.sort_values("id", ascending=False), hide_index=True, use_container_width=True)
+
+elif page == "Zoho":
+    # Every Zoho call sits inside a button handler: nothing hits the network on a plain rerun.
+    st.title("Zoho Inventory: draft purchase orders")
+    st.caption("The copilot only creates DRAFT purchase orders. Procurement reviews and issues them "
+               "inside Zoho. Nothing is ever issued, emailed or received from here.")
+    out, msg = build_export(db)
+
+    def csv_fallback():
+        st.subheader("Fallback: CSV export")
+        if out is None:
+            st.caption(msg)
+        else:
+            run_ok = latest_run(db, "ok")
+            st.download_button("⬇ Download draft POs as CSV", out.to_csv(index=False),
+                               file_name=export_filename(run_ok["run_date"]), mime="text/csv",
+                               disabled=out.empty, key="zoho-csv")
+
+    if not zoho_enabled():
+        st.info("Zoho is switched off (`ZOHO_ENABLED` is false), so the app works exactly as before. "
+                "Use the Export page (CSV) for Zoho import.")
+        csv_fallback()
+        st.stop()
+    if missing_keys():
+        st.error(f"Zoho is switched on but these secrets are missing: {', '.join(missing_keys())}. "
+                 "Add them in the app's secrets (see docs/zoho_setup.md).")
+        csv_fallback()
+        st.stop()
+
+    from copilot.zoho_push import approved_rows, failed_vendors, push_drafts, push_log, retry_failed
+    PREFIX = "FRC-DEMO" if DEMO else "FRC"
+
+    @st.cache_resource
+    def zoho_client() -> ZohoClient:
+        # Cached object; the access token lives (and refreshes) inside it, never in st.cache_data.
+        return ZohoClient.from_settings(settings())
+
+    try:
+        c1, c2 = st.columns(2)
+        if c1.button("Check connection"):
+            with st.spinner("Asking Zoho..."):
+                try:
+                    zoho_client().get("contacts", {"per_page": 1})
+                    c1.success("Connected to Zoho Inventory")
+                except ZohoError as e:
+                    c1.error(f"Zoho: {e.message}")
+        snaps = db.fetch_all("zoho_on_order")
+        if snaps.empty:
+            c2.caption("On-order: not synced yet (it syncs at the start of every run).")
+        else:
+            last = snaps[snaps["synced_at"] == snaps["synced_at"].max()]
+            c2.caption(f"Last on-order sync: {str(last['synced_at'].iloc[0])[:16]}Z · "
+                       f"{int((last['units_on_order'] > 0).sum())} SKUs with open POs")
+
+        run = latest_run(db, "ok")
+        if run is None:
+            st.info("No successful run yet. Use Run now in the sidebar.")
+            st.stop()
+        st.subheader(f"Approved orders from run {run['id']} ({run['run_date']})")
+        rows = approved_rows(db, run["id"])
+        if rows.empty:
+            st.info("Nothing approved with a quantity above 0 in this run yet (see Queues).")
+        else:
+            st.dataframe(rows[["sku", "final_action", "final_qty", "decision", "decided_by"]],
+                         hide_index=True, use_container_width=True)
+        signed = assumptions_signed(db)
+        if not signed:
+            st.warning("Disabled: every assumption must be signed off first (Sign-off page).")
+        pushing = st.session_state.get("pushing", False)
+        if st.button("📤 Send approved to Zoho (as drafts)", type="primary",
+                     disabled=pushing or not signed or rows.empty or not who):
+            st.session_state["pushing"] = True
+            try:
+                with st.spinner("Creating draft purchase orders in Zoho..."):
+                    res = push_drafts(db, zoho_client(), run["id"], pushed_by=who, prefix=PREFIX)
+                for r in res:
+                    {"created": st.success, "skipped": st.info, "failed": st.error}[r["status"]](
+                        f"{r['status'].upper()}: {r['reference_number']} → "
+                        f"{r.get('zoho_po_number') or '-'} {('· ' + r['error']) if r.get('error') else ''}")
+            except ZohoError as e:
+                st.error(f"Zoho: {e.message}")
+            finally:
+                st.session_state["pushing"] = False
+        if not who:
+            st.caption("Enter your name in the sidebar to send.")
+
+        failed = failed_vendors(db, run["id"])
+        if failed and st.button(f"🔁 Retry failed ({len(failed)})", disabled=pushing or not signed):
+            st.session_state["pushing"] = True
+            try:
+                with st.spinner("Retrying failed vendors..."):
+                    retry_failed(db, zoho_client(), run["id"], pushed_by=who, prefix=PREFIX)
+                st.rerun()
+            except ZohoError as e:
+                st.error(f"Zoho: {e.message}")
+            finally:
+                st.session_state["pushing"] = False
+
+        st.subheader("Results per vendor")
+        log = push_log(db, run["id"])
+        if log.empty:
+            st.caption("Nothing sent for this run yet.")
+        else:
+            st.dataframe(log[["pushed_at", "vendor_name", "reference_number", "status", "zoho_po_number",
+                              "line_count", "total_qty", "error", "pushed_by"]],
+                         hide_index=True, use_container_width=True)
+    except ZohoError as e:
+        st.error(f"Zoho: {e.message}")
+    except Exception as e:  # never show a raw traceback to Raghav or procurement
+        st.error(f"Zoho page problem: {type(e).__name__}. If the zoho tables are missing, run "
+                 "supabase/migrations/002_zoho.sql in Supabase.")
+    csv_fallback()
