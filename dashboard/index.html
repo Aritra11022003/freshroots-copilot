@@ -4,348 +4,541 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Freshroots Ops Dashboard</title>
-<meta name="description" content="Live replenishment status for Freshroots: what the rules engine recommends, what Raghav has decided, and what has gone to Zoho as draft purchase orders.">
+<meta name="description" content="Live replenishment control room for Freshroots: stock health, Raghav's decisions and draft purchase orders in Zoho.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23134e3a'/%3E%3Cpath d='M9 21c0-7 5-11 14-12-1 9-5 14-12 14' fill='none' stroke='%23b6f09c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
-    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --band: #f0efec;
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --undecided: #c3c2b7;
-    --good: #0ca30c; --good-text: #006300; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
-    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --page: #f4f5f1; --surface: #ffffff; --surface-2: #f9faf7; --ink: #0f1a14; --ink-2: #4b5650; --muted: #85908a;
+    --line: #e4e7e1; --grid: #edefe9; --axis: #c9cec6; --ring: rgba(15,26,20,0.08); --shadow: 0 1px 2px rgba(15,26,20,.04), 0 8px 24px rgba(15,26,20,.06);
+    --band: #e9efe6; --hover: #f1f4ee;
+    --brand-1: #0e3b2c; --brand-2: #17694b; --brand-ink: #e9f7ef; --brand-accent: #b6f09c;
+    --s1: #2a78d6; --s1-wash: rgba(42,120,214,.10); --s2: #eb6834; --s3: #1baf7a; --neutral: #c9cec6;
+    --good: #0ca30c; --good-wash: rgba(12,163,12,.10); --warning: #fab219; --warning-wash: rgba(250,178,25,.16);
+    --serious: #ec835a; --serious-wash: rgba(236,131,90,.16); --critical: #d03b3b; --critical-wash: rgba(208,59,59,.10);
+    --good-text: #006300;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
-      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
-      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --band: #383835;
-      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --undecided: #52514e; --good-text: #0ca30c;
+      --page: #0b0f0d; --surface: #151a17; --surface-2: #1a201c; --ink: #f2f6f3; --ink-2: #c3cbc5; --muted: #8b958f;
+      --line: #263029; --grid: #212a24; --axis: #3a453d; --ring: rgba(255,255,255,0.08); --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --band: #24302a; --hover: #1d2520; --brand-1: #0a2e22; --brand-2: #11523a;
+      --s1: #3987e5; --s1-wash: rgba(57,135,229,.16); --s2: #d95926; --s3: #199e70; --neutral: #4a554e; --good-text: #0ca30c;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
-    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --band: #383835;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --undecided: #52514e; --good-text: #0ca30c;
+    --page: #0b0f0d; --surface: #151a17; --surface-2: #1a201c; --ink: #f2f6f3; --ink-2: #c3cbc5; --muted: #8b958f;
+    --line: #263029; --grid: #212a24; --axis: #3a453d; --ring: rgba(255,255,255,0.08); --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --band: #24302a; --hover: #1d2520; --brand-1: #0a2e22; --brand-2: #11523a;
+    --s1: #3987e5; --s1-wash: rgba(57,135,229,.16); --s2: #d95926; --s3: #199e70; --neutral: #4a554e; --good-text: #0ca30c;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.45 var(--font); }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
-  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
-  h1 { font-size: 24px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-2); margin: 4px 0 0; }
-  .meta { color: var(--muted); font-size: 13px; text-align: right; }
-  .meta a { color: var(--ink-2); }
-  button.ghost { font: inherit; font-size: 13px; color: var(--ink-2); background: none; border: 1px solid var(--ring); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
-  button.ghost:hover { background: var(--band); }
-  .alerts { display: grid; gap: 8px; margin: 0 0 16px; }
-  .alert { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 14px; }
-  .alert .ic { font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 12px; flex: none; margin-top: 1px; }
-  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px; }
-  .grid { display: grid; gap: 16px; }
-  .top { grid-template-columns: 1.3fr 2fr; margin-bottom: 16px; }
-  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .tile .label, .card h2 { font-size: 13px; color: var(--ink-2); font-weight: 500; margin: 0 0 6px; }
-  .card h2 { font-size: 15px; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
-  .card .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
-  .tile .value { font-size: 28px; font-weight: 600; }
-  .tile .note { color: var(--muted); font-size: 12px; }
-  .hero .value { font-size: 56px; font-weight: 650; line-height: 1.05; letter-spacing: -0.02em; }
-  .hero .note { font-size: 14px; color: var(--ink-2); }
-  .two { grid-template-columns: 2fr 1fr; margin-bottom: 16px; }
-  .three { grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px; }
-  svg text { font-family: var(--font); }
-  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 1px 8px 1px 6px; border-radius: 999px; border: 1px solid var(--ring); white-space: nowrap; color: var(--ink); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--grid); padding: 6px 8px; white-space: nowrap; }
-  td { border-bottom: 1px solid var(--grid); padding: 7px 8px; vertical-align: top; }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .tablewrap { overflow-x: auto; }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; } button { font: inherit; color: inherit; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+
+  .band { background: radial-gradient(1200px 400px at 85% -20%, rgba(182,240,156,.22), transparent 60%), linear-gradient(135deg, var(--brand-1), var(--brand-2));
+          color: var(--brand-ink); padding: 22px 0 88px; position: relative; overflow: hidden; }
+  .band::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 18px 18px; pointer-events: none; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 40px; height: 40px; border-radius: 11px; background: rgba(255,255,255,.1); display: grid; place-items: center; border: 1px solid rgba(255,255,255,.15); }
+  .brand h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+  .brand p { margin: 0; font-size: 12.5px; opacity: .75; }
+  .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-accent); animation: pulse 2s infinite; }
+  .live.stale .pulse { background: #fab219; animation: none; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(182,240,156,.7); } 70% { box-shadow: 0 0 0 8px rgba(182,240,156,0); } 100% { box-shadow: 0 0 0 0 rgba(182,240,156,0); } }
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: var(--brand-ink); cursor: pointer; text-decoration: none; }
+  .btn:hover { background: rgba(255,255,255,.14); }
+  .btn.solid { background: var(--brand-accent); color: #0e3b2c; border-color: transparent; font-weight: 600; }
+  .headline { position: relative; z-index: 1; margin-top: 28px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; align-items: end; }
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; opacity: .7; font-weight: 600; }
+  .big { font-size: 64px; font-weight: 800; letter-spacing: -.035em; line-height: 1; margin: 6px 0 8px; }
+  .big small { font-size: 22px; font-weight: 600; opacity: .7; letter-spacing: 0; margin-left: 6px; }
+  .lede { font-size: 15px; opacity: .88; max-width: 540px; margin: 0; }
+  .spark-wrap { justify-self: end; text-align: right; }
+  .spark-wrap .eyebrow { margin-bottom: 6px; }
+
+  .pipeline { margin-top: -60px; position: relative; z-index: 2; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); border: 1px solid var(--ring);
+              display: grid; grid-template-columns: repeat(5, 1fr); padding: 18px 8px; }
+  .step { position: relative; padding: 4px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .step + .step { border-left: 1px dashed var(--line); }
+  .node { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; position: relative; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
+  .node .st { position: absolute; right: -6px; bottom: -6px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; border: 2px solid var(--surface); }
+  .step .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .step .v { font-size: 15px; font-weight: 650; margin-top: 1px; }
+  .step .d { font-size: 12px; color: var(--ink-2); }
+
+  main { padding: 22px 0 56px; }
+  .alerts { display: grid; gap: 8px; margin-bottom: 18px; }
+  .alerts:empty { display: none; }
+  .alert { display: flex; gap: 10px; align-items: center; border-radius: 12px; padding: 10px 14px; border: 1px solid var(--ring); background: var(--surface); }
+  .alert .ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 12px; flex: none; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 16px; box-shadow: var(--shadow); }
+  .kpi { padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; }
+  .kpi .icon { grid-row: span 2; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; }
+  .kpi .label { font-size: 12.5px; color: var(--ink-2); font-weight: 500; }
+  .kpi .value { font-size: 28px; font-weight: 750; letter-spacing: -.02em; line-height: 1.1; }
+  .kpi .foot { grid-column: 1 / -1; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .grid-main { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+  .stack { display: grid; gap: 16px; align-content: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .panel { padding: 18px 20px; }
+  .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .ph h2 { font-size: 15px; margin: 0; font-weight: 650; }
+  .ph p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg button { border: 0; background: none; padding: 4px 10px; border-radius: 7px; font-size: 12px; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.1); font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 12px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
-  .kv dt { color: var(--muted); } .kv dd { margin: 0; }
-  #tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--ring); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; z-index: 9; max-width: 260px; }
-  #tip b { font-weight: 600; }
-  .empty { color: var(--muted); font-size: 14px; }
-  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
-  @media (max-width: 900px) {
-    .top, .two, .three { grid-template-columns: 1fr; }
-    .tiles { grid-template-columns: repeat(2, 1fr); }
-    .meta { text-align: left; }
-    .meta > div { justify-content: flex-start !important; }
+  .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 9px 2px 7px; border-radius: 999px; white-space: nowrap; }
+  .chip .i { font-size: 10px; font-weight: 800; }
+  .chip.good { background: var(--good-wash); color: var(--good-text); }
+  .chip.warning { background: var(--warning-wash); color: var(--ink); }
+  .chip.serious { background: var(--serious-wash); color: var(--ink); }
+  .chip.critical { background: var(--critical-wash); color: var(--critical); }
+  .chip.plain { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+  svg text { font-family: var(--font); }
+  .sh-row { cursor: pointer; } .sh-row:hover .sh-bg { fill: var(--hover); }
+  .donut-wrap { display: grid; grid-template-columns: 132px 1fr; gap: 18px; align-items: center; }
+  .dl { display: grid; gap: 8px; } .dl div { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .po { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+  .po:first-child { border-top: 0; padding-top: 0; }
+  .po .pn { font-weight: 650; } .po .ref { font-size: 12px; color: var(--muted); }
+  .po .u { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .po .doc { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--s1-wash); color: var(--s1); }
+  .timeline { display: flex; overflow-x: auto; padding: 4px 2px 2px; }
+  .tl { flex: 1; min-width: 56px; text-align: center; position: relative; cursor: default; }
+  .tl::before { content: ""; position: absolute; top: 12px; left: -50%; width: 100%; height: 2px; background: var(--line); }
+  .tl:first-child::before { display: none; }
+  .tl .dot { width: 26px; height: 26px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 800; position: relative; border: 3px solid var(--surface); }
+  .tl .n { font-size: 12px; font-weight: 650; margin-top: 6px; } .tl .dt { font-size: 11px; color: var(--muted); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-weight: 550; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 220px; }
+  .search input { border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; width: 100%; }
+  .tablewrap { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; cursor: pointer; user-select: none; }
+  th .ar { opacity: .35; margin-left: 4px; } th[aria-sort] .ar { opacity: 1; color: var(--ink); }
+  td { padding: 11px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tbody tr { cursor: pointer; } tbody tr:hover { background: var(--hover); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .sku { font-weight: 650; } .nm { color: var(--ink-2); }
+  .minibar { display: inline-block; width: 64px; height: 6px; border-radius: 3px; background: var(--band); position: relative; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+  .minibar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; }
+  .scrim { position: fixed; inset: 0; background: rgba(5,10,8,.45); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 20; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--surface); z-index: 21; transform: translateX(100%); transition: transform .25s ease; box-shadow: -12px 0 40px rgba(0,0,0,.18); overflow-y: auto; visibility: hidden; }
+  .open .scrim { opacity: 1; pointer-events: auto; } .open .drawer { transform: none; visibility: visible; }
+  .dh { padding: 20px 22px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  .dh h3 { margin: 4px 40px 8px 0; font-size: 20px; letter-spacing: -.01em; }
+  .close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; }
+  .db { padding: 18px 22px 28px; display: grid; gap: 18px; }
+  .mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .m { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .m .l { font-size: 11.5px; color: var(--muted); } .m .x { font-size: 17px; font-weight: 700; }
+  .reason { background: var(--surface-2); border-left: 3px solid var(--s1); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 13px; color: var(--ink-2); white-space: normal; }
+  #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--surface); border-radius: 10px; padding: 8px 11px; font-size: 12px; line-height: 1.45; display: none; z-index: 30; max-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+  .empty { color: var(--muted); font-size: 13px; padding: 6px 0; margin: 0; }
+  .sk { background: linear-gradient(90deg, var(--band), var(--hover), var(--band)); background-size: 200% 100%; animation: sk 1.2s infinite; border-radius: 8px; }
+  @keyframes sk { to { background-position: -200% 0; } }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 0 0 32px; }
+  :focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+  @media (max-width: 1040px) {
+    .pipeline { grid-template-columns: repeat(2, 1fr); gap: 16px 0; } .step + .step { border-left: 0; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid-main, .grid-3 { grid-template-columns: 1fr; }
+    .headline { grid-template-columns: 1fr; } .spark-wrap { justify-self: start; text-align: left; }
   }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; } .pipeline { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr; }
+    .big { font-size: 48px; } .donut-wrap { grid-template-columns: 112px 1fr; } .search { min-width: 0; flex: 1; }
+    .tablewrap { margin: 0 -20px; padding: 0 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Freshroots replenishment: ops dashboard</h1>
-      <p class="sub">What the rules engine recommends, what Raghav has decided, and what has gone to Zoho as draft POs.</p>
-    </div>
-    <div class="meta">
-      <div id="updated">Loading live data…</div>
-      <div style="margin-top:6px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap">
-        <button class="ghost" id="refresh">Refresh</button>
-        <button class="ghost" id="theme">Theme</button>
+<div class="band">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 16c0-6 4-9.5 13-10.5-.8 8-4.6 12.2-11 12.5" stroke="#b6f09c" stroke-width="2" stroke-linecap="round"/><path d="M5 19c2.5-3.5 5.5-6 9-8" stroke="#b6f09c" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><h1>Freshroots Replenishment</h1><p>Ops control room · rules engine → Raghav → Zoho</p></div>
       </div>
-      <div style="margin-top:6px"><a href="https://freshroots-copilot.streamlit.app/" target="_blank" rel="noopener">Open the app</a> · <a href="https://github.com/Aritra11022003/freshroots-copilot" target="_blank" rel="noopener">GitHub</a></div>
-    </div>
-  </header>
-
-  <div class="alerts" id="alerts"></div>
-
-  <section class="grid top">
-    <div class="card hero">
-      <div class="tile">
-        <div class="label">Units to reorder this run</div>
-        <div class="value" id="hero">–</div>
-        <div class="note" id="hero-note"></div>
+      <div class="actions">
+        <span class="live" id="live"><span class="pulse"></span><span id="updated">Connecting…</span></span>
+        <button class="btn" id="refresh" title="Refresh now">↻ Refresh</button>
+        <button class="btn" id="theme" title="Toggle light / dark">◐ Theme</button>
+        <a class="btn" href="https://github.com/Aritra11022003/freshroots-copilot" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn solid" href="https://freshroots-copilot.streamlit.app/" target="_blank" rel="noopener">Open the app →</a>
       </div>
     </div>
-    <div class="tiles" id="tiles"></div>
-  </section>
-
-  <section class="grid two">
-    <div class="card">
-      <h2>Weeks of cover against each SKU's target window</h2>
-      <p class="hint">Bar = stock ÷ expected weekly demand (festival uplift applied). Grey band = the SKU's window (3–4 weeks perishable, 6–14 weeks otherwise).</p>
-      <div id="cover"></div>
-    </div>
-    <div class="grid" style="align-content:start">
-      <div class="card">
-        <h2>Recommended actions</h2>
-        <p class="hint">SKUs per action in the latest run.</p>
-        <div id="actions"></div>
+    <div class="headline">
+      <div>
+        <div class="eyebrow">Units to reorder · latest run</div>
+        <div class="big" id="hl-big"><span class="sk" style="display:inline-block;width:220px;height:56px;opacity:.3"></span></div>
+        <p class="lede" id="hl-lede">&nbsp;</p>
       </div>
-      <div class="card">
-        <h2>Raghav's decisions</h2>
-        <p class="hint">Latest decision per SKU, this run.</p>
-        <div id="decisions"></div>
-      </div>
+      <div class="spark-wrap"><div class="eyebrow">Reorder units across runs</div><div id="hl-spark"></div></div>
     </div>
-  </section>
-
-  <section class="grid three">
-    <div class="card">
-      <h2>Zoho draft POs</h2>
-      <p class="hint">Drafts only. Procurement issues them in Zoho.</p>
-      <div id="zoho"></div>
-    </div>
-    <div class="card">
-      <h2>Backtest kill gate</h2>
-      <p class="hint">Does the engine match Raghav's past calls ≥ 80%?</p>
-      <div id="backtest"></div>
-    </div>
-    <div class="card">
-      <h2>Recent runs</h2>
-      <p class="hint">Mon & Thu 07:00 IST, plus manual runs.</p>
-      <div id="runs"></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>All SKUs, latest run</h2>
-    <p class="hint">The full table behind the charts.</p>
-    <div class="tablewrap" id="table"></div>
-  </section>
-
-  <footer>Read-only. Data comes from the copilot's Supabase project through a server-side API; this page never sees a database key. Nothing here places an order.</footer>
+  </div>
 </div>
+
+<div class="wrap">
+  <section class="pipeline" id="pipeline" aria-label="Pipeline status"><div class="sk" style="height:48px;grid-column:1/-1;margin:0 12px"></div></section>
+  <main>
+    <div class="alerts" id="alerts"></div>
+    <section class="kpis" id="kpis"></section>
+    <section class="grid-main">
+      <div class="card panel">
+        <div class="ph">
+          <div><h2>Stock health</h2><p>Weeks of cover on each SKU's target window. Hollow ring = cover once the approved order lands. Click a row for detail.</p></div>
+          <div class="seg" role="group" aria-label="Filter SKUs" id="sh-filter">
+            <button aria-pressed="true" data-f="all">All</button><button aria-pressed="false" data-f="below">At risk</button>
+            <button aria-pressed="false" data-f="inside">Healthy</button><button aria-pressed="false" data-f="above">Overstock</button>
+          </div>
+        </div>
+        <div id="health"><div class="sk" style="height:400px"></div></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--band);width:22px"></span>Target window</span>
+          <span><span class="sw" style="background:var(--critical);border-radius:50%"></span>↓ Stockout risk</span>
+          <span><span class="sw" style="background:var(--good);border-radius:50%"></span>✓ Healthy</span>
+          <span><span class="sw" style="background:var(--serious);border-radius:50%"></span>↑ Overstock</span>
+          <span><span class="sw" style="border:2px solid var(--s1);border-radius:50%;background:transparent"></span>After approved order</span>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card panel"><div class="ph"><div><h2>Raghav's decisions</h2><p>Latest decision per SKU, this run</p></div></div><div id="decisions"><div class="sk" style="height:132px"></div></div></div>
+        <div class="card panel"><div class="ph"><div><h2>Recommended actions</h2><p>SKUs per action</p></div></div><div id="actions"><div class="sk" style="height:90px"></div></div></div>
+        <div class="card panel"><div class="ph"><div><h2>Reorder units by region</h2><p>Units the engine recommends ordering</p></div></div><div id="regions"><div class="sk" style="height:70px"></div></div></div>
+      </div>
+    </section>
+    <section class="grid-3">
+      <div class="card panel"><div class="ph"><div><h2>Draft POs in Zoho</h2><p>Drafts only. Procurement issues them.</p></div></div><div id="zoho"><div class="sk" style="height:120px"></div></div></div>
+      <div class="card panel"><div class="ph"><div><h2>Backtest kill gate</h2><p>Engine vs Raghav's past calls, target 80%</p></div></div><div id="backtest"><div class="sk" style="height:120px"></div></div></div>
+      <div class="card panel"><div class="ph"><div><h2>Run history</h2><p>Mon &amp; Thu 07:00 IST + manual runs</p></div></div><div id="runs"><div class="sk" style="height:120px"></div></div></div>
+    </section>
+    <section class="card panel">
+      <div class="ph">
+        <div><h2>Every SKU</h2><p>Search, filter, sort. Click a row for the full reasoning.</p></div>
+        <div class="toolbar">
+          <label class="search"><span aria-hidden="true" style="color:var(--muted)">⌕</span><input id="q" type="search" placeholder="Search SKU, product, region…" aria-label="Search SKUs"></label>
+          <div class="seg" role="group" aria-label="Filter by action" id="t-filter">
+            <button aria-pressed="true" data-f="all">All</button><button aria-pressed="false" data-f="reorder">Reorder</button>
+            <button aria-pressed="false" data-f="pause">Pause</button><button aria-pressed="false" data-f="none">No action</button>
+            <button aria-pressed="false" data-f="exception">Exceptions</button>
+          </div>
+        </div>
+      </div>
+      <div class="tablewrap" id="table"></div>
+    </section>
+  </main>
+  <footer>Read-only · live data from the copilot's Supabase project through a server-side API · no database key or personal data reaches this page · nothing here places an order</footer>
+</div>
+<div id="drawer-root"><div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" id="drawer"></aside></div>
 <div id="tip" role="tooltip"></div>
 
 <script>
 const $ = s => document.querySelector(s);
-const fmt = n => n == null ? "–" : Number(n).toLocaleString("en-IN");
+const fmt = n => n == null || isNaN(n) ? "–" : Number(n).toLocaleString("en-IN");
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const ACTION_LABEL = {"REORDER_NOW":"Reorder now","REORDER_1.5X":"Reorder 1.5×","PAUSE_NEXT_ORDER":"Pause next order","NO_ACTION":"No action","NEEDS_REVIEW":"Needs review"};
-const ACTION_ORDER = ["REORDER_NOW","REORDER_1.5X","PAUSE_NEXT_ORDER","NO_ACTION","NEEDS_REVIEW"];
-const STATUS = {good:["var(--good)","✓"], warning:["var(--warning)","!"], serious:["var(--serious)","!"], critical:["var(--critical)","×"]};
-const chip = (kind, text) => `<span class="chip"><span class="dot" style="background:${STATUS[kind][0]}"></span>${esc(text)}</span>`;
-const short = (name, n) => { const s = (name || "").replace("Freshroots ", ""); if (s.length <= n) return s;
-  const cut = s.slice(0, n); return cut.slice(0, cut.lastIndexOf(" ") > 8 ? cut.lastIndexOf(" ") : n) + "…"; };
-const when = iso => iso ? new Date(iso).toLocaleString("en-IN", {dateStyle:"medium", timeStyle:"short"}) : "–";
+const short = (n, k) => { const s = (n || "").replace("Freshroots ", ""); if (s.length <= k) return s; const c = s.slice(0, k); return c.slice(0, c.lastIndexOf(" ") > 6 ? c.lastIndexOf(" ") : k) + "…"; };
+const when = iso => iso ? new Date(iso).toLocaleString("en-IN", {day: "numeric", month: "short", hour: "numeric", minute: "2-digit"}) : "–";
+const A = {"REORDER_NOW": "Reorder now", "REORDER_1.5X": "Reorder 1.5×", "PAUSE_NEXT_ORDER": "Pause next order", "NO_ACTION": "No action", "NEEDS_REVIEW": "Needs review"};
+const ORDER = ["REORDER_NOW", "REORDER_1.5X", "PAUSE_NEXT_ORDER", "NO_ACTION", "NEEDS_REVIEW"];
+const ST = { good: ["var(--good)", "✓"], warning: ["var(--warning)", "!"], serious: ["var(--serious)", "↑"], critical: ["var(--critical)", "↓"] };
+const chip = (k, t) => `<span class="chip ${k}"><span class="i">${(ST[k] || ["", "•"])[1]}</span>${esc(t)}</span>`;
+const state = r => r.cover == null ? "none" : r.cover < r.window_min ? "below" : r.cover > r.window_max ? "above" : "inside";
+const STATE = { below: ["critical", "Stockout risk", "var(--critical)"], inside: ["good", "Healthy", "var(--good)"], above: ["serious", "Overstock", "var(--serious)"], none: ["plain", "No demand", "var(--muted)"] };
+const DEC = { approve: ["good", "Approved"], override: ["warning", "Overridden"], reject: ["critical", "Rejected"] };
+const I = (p, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  clock: I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 18), shield: I('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>', 18),
+  cog: I('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>', 18),
+  user: I('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', 18), doc: I('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>', 18),
+  down: I('<path d="M12 5v14M6 13l6 6 6-6"/>'), up: I('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+  truck: I('<path d="M2 6h12v10H2zM14 10h4l3 3v3h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>'), check: I('<path d="M4 12l5 5L20 6"/>'),
+};
+let DATA = null;
 
-// theme toggle (per-viewer convenience only)
 try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
 $("#theme").onclick = () => {
-  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark"
-             : matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark";
   try { localStorage.setItem("theme", document.documentElement.dataset.theme); } catch (e) {}
 };
 
-// tooltip
 const tip = $("#tip");
-function showTip(e, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(e); }
-function moveTip(e) {
-  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
-  tip.style.left = x + "px"; tip.style.top = y + "px";
-}
-function hideTip() { tip.style.display = "none"; }
+const moveTip = e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8) + "px"; };
 function bindTips(root) {
   root.querySelectorAll("[data-tip]").forEach(el => {
-    el.addEventListener("mouseenter", e => showTip(e, el.dataset.tip));
+    el.addEventListener("mouseenter", e => { tip.innerHTML = el.dataset.tip; tip.style.display = "block"; moveTip(e); });
     el.addEventListener("mousemove", moveTip);
-    el.addEventListener("mouseleave", hideTip);
+    el.addEventListener("mouseleave", () => tip.style.display = "none");
   });
 }
 
-function tile(label, value, note) {
-  return `<div class="card tile"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="note">${note || ""}</div></div>`;
+function spark(points, w = 260, h = 60) {
+  if (!points.length) return '<div style="opacity:.6;font-size:12px">No history yet</div>';
+  const vals = points.map(p => p.v), max = Math.max(...vals), min = Math.min(...vals);
+  const pad = (max - min) || Math.max(max * 0.2, 1);
+  const x = i => points.length === 1 ? w - 8 : 6 + i * (w - 14) / (points.length - 1);
+  const lo = max === min ? min - pad : min, hi = max === min ? max + pad : max;   // flat trend sits mid-height
+  const y = v => h - 8 - (h - 18) * (v - lo) / (hi - lo);
+  const d = points.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.v)}`).join("");
+  const last = points[points.length - 1];
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Reorder units trend">
+    <path d="${d}L${x(points.length - 1)},${h}L${x(0)},${h}Z" fill="rgba(182,240,156,.12)"/>
+    <path d="${d}" fill="none" stroke="rgba(233,247,239,.6)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.v)}" r="${i === points.length - 1 ? 5 : 3}" fill="${i === points.length - 1 ? "#b6f09c" : "rgba(233,247,239,.6)"}" stroke="#17694b" stroke-width="2"/>
+      <circle cx="${x(i)}" cy="${y(p.v)}" r="11" fill="transparent" data-tip="<b>Run #${p.id}</b> · ${esc(p.d)}<br>${fmt(p.v)} units to reorder"/>`).join("")}
+    <text x="${x(points.length - 1) - 10}" y="${y(last.v) - 10}" text-anchor="end" font-size="11" font-weight="600" fill="#e9f7ef">${fmt(last.v)}</text></svg>`;
+}
+
+function renderHero(d) {
+  const s = d.summary, run = d.latest_run;
+  $("#hl-big").innerHTML = `${fmt(s.reorder_units)}<small>units</small>`;
+  $("#hl-lede").innerHTML = run ? `Across <b>${s.reorder_skus} of ${s.skus} SKUs</b> in run #${run.id} (${esc(run.run_date)}). ${s.pause_skus} SKU${s.pause_skus === 1 ? " should" : "s should"} pause the next order${s.exceptions ? `; ${s.exceptions} need Raghav's judgment` : ""}.` : "No successful run yet.";
+  $("#hl-spark").innerHTML = spark((d.trend || []).map(t => ({ v: t.reorder_units, id: t.run_id, d: t.run_date })));
+  bindTips($("#hl-spark"));
+}
+
+function renderPipeline(d) {
+  const any = d.latest_any_run, run = d.latest_run, s = d.summary, dec = s.decisions;
+  const decided = dec.approve + dec.override + dec.reject;
+  const lastPo = (d.zoho.pushes || []).find(p => p.status === "created");
+  const steps = [
+    { icon: "clock", k: "1 · Scheduled run", st: any ? ({ok: "good", blocked: "warning"}[any.status] || "critical") : "warning", v: any ? `Run #${any.id} · ${any.status}` : "No runs yet", dd: any ? `${any.triggered_by} · ${when(any.finished_at)}` : "" },
+    { icon: "shield", k: "2 · Validation gate", st: d.blocked_gaps ? "critical" : "good", v: d.blocked_gaps ? `${d.blocked_gaps} data gaps` : "Data passed", dd: d.blocked_gaps ? "run blocked, nothing written" : "keys, columns, history all ok" },
+    { icon: "cog", k: "3 · Rules engine", st: run ? "good" : "warning", v: `${s.skus} SKUs scored`, dd: `${s.reorder_skus} reorder · ${s.pause_skus} pause · ${s.exceptions} exception${s.exceptions === 1 ? "" : "s"}` },
+    { icon: "user", k: "4 · Raghav decides", st: s.skus && decided === s.skus ? "good" : "warning", v: `${decided} / ${s.skus} decided`, dd: `${d.assumptions.signed}/${d.assumptions.total} assumptions signed` },
+    { icon: "doc", k: "5 · Zoho draft PO", st: lastPo ? "good" : "warning", v: lastPo ? `${esc(lastPo.zoho_po_number)} · draft` : "Not sent yet", dd: lastPo ? `${esc(lastPo.reference_number)} · ${fmt(lastPo.total_qty)} units` : "waiting for approvals" },
+  ];
+  $("#pipeline").innerHTML = steps.map(x => `<div class="step"><div class="node">${ICON[x.icon]}<span class="st" style="background:${ST[x.st][0]}" aria-label="${x.st}">${ST[x.st][1] === "↓" ? "×" : ST[x.st][1]}</span></div>
+    <div><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="d">${x.dd}</div></div></div>`).join("");
 }
 
 function renderAlerts(d) {
-  const a = [];
-  const any = d.latest_any_run, ok = d.latest_run;
-  if (any && any.status !== "ok") a.push(["critical", `Latest run #${any.id} (${any.run_date}) was <b>${esc(any.status)}</b>` + (d.blocked_gaps ? ` with ${d.blocked_gaps} data gap(s)` : "") + `. Showing the last successful run.`]);
-  if (d.assumptions.signed < d.assumptions.total) a.push(["warning", `Unsigned assumptions (${d.assumptions.signed}/${d.assumptions.total}): <b>not for procurement</b>.`]);
-  if (!ok) a.push(["warning", "No successful run yet."]);
-  $("#alerts").innerHTML = a.map(([k, t]) => `<div class="alert" role="status"><span class="ic" style="background:${STATUS[k][0]}">${STATUS[k][1]}</span><div>${t}</div></div>`).join("");
+  const a = [], any = d.latest_any_run;
+  if (any && any.status !== "ok") a.push(["critical", "×", `Latest run #${any.id} was <b>${esc(any.status)}</b>${d.blocked_gaps ? ` with ${d.blocked_gaps} data gap(s)` : ""}. Showing the last successful run.`]);
+  if (d.assumptions.signed < d.assumptions.total) a.push(["warning", "!", `<b>Unsigned assumptions</b> (${d.assumptions.signed}/${d.assumptions.total}): not for procurement yet.`]);
+  $("#alerts").innerHTML = a.map(([k, ic, t]) => `<div class="alert" role="status"><span class="ic" style="background:${ST[k][0]}">${ic}</span><div>${t}</div></div>`).join("");
 }
 
-function renderTiles(d) {
-  const s = d.summary, dec = s.decisions, decided = dec.approve + dec.override + dec.reject;
-  $("#hero").textContent = fmt(s.reorder_units);
-  $("#hero-note").textContent = `across ${s.reorder_skus} of ${s.skus} SKUs · run #${d.latest_run?.id ?? "–"} (${d.latest_run?.run_date ?? "–"})`;
-  const sent = (d.zoho.pushes || []).filter(p => p.status === "created").length;
-  $("#tiles").innerHTML = [
-    tile("SKUs to pause", s.pause_skus, "above max cover"),
-    tile("Exceptions for Raghav", s.exceptions, "need judgment"),
-    tile("Decisions made", `${decided}<span style="font-size:16px;color:var(--muted)"> / ${s.skus}</span>`, `${dec.override} override(s)`),
-    tile("Assumptions signed", `${d.assumptions.signed}<span style="font-size:16px;color:var(--muted)"> / ${d.assumptions.total}</span>`, d.assumptions.signed === d.assumptions.total ? "procurement can export" : "export blocked"),
-    tile("Draft POs created", sent, "in Zoho, all runs"),
-    tile("On-order source", d.latest_run?.on_order_source?.startsWith("Zoho") ? "Zoho" : "None", d.zoho.last_sync ? `synced ${when(d.zoho.last_sync)}` : "no feed"),
-  ].join("");
+function renderKpis(d) {
+  const r = d.recommendations;
+  const below = r.filter(x => state(x) === "below").length, above = r.filter(x => state(x) === "above").length;
+  const onOrder = r.reduce((t, x) => t + (x.on_order || 0), 0);
+  const fixed = r.filter(x => state(x) === "below" && x.projected_cover != null && x.projected_cover >= x.window_min).length;
+  const k = [
+    { icon: "down", c: "var(--critical)", w: "var(--critical-wash)", l: "SKUs at stockout risk", v: below, f: below ? chip("critical", `${below} below minimum cover`) : chip("good", "None below minimum") },
+    { icon: "check", c: "var(--good-text)", w: "var(--good-wash)", l: "Risks fixed by approved orders", v: `${fixed}<span style="font-size:15px;color:var(--muted);font-weight:600"> / ${below}</span>`, f: "back inside the window once delivered" },
+    { icon: "up", c: "var(--serious)", w: "var(--serious-wash)", l: "SKUs overstocked", v: above, f: above ? chip("serious", "pause their next order") : chip("good", "None above maximum") },
+    { icon: "truck", c: "var(--s1)", w: "var(--s1-wash)", l: "Units on order (Zoho)", v: fmt(onOrder), f: d.zoho.last_sync ? `last synced ${when(d.zoho.last_sync)}` : "no on-order feed" },
+  ];
+  $("#kpis").innerHTML = k.map(x => `<div class="card kpi"><div class="icon" style="background:${x.w};color:${x.c}">${ICON[x.icon]}</div>
+    <div class="label">${x.l}</div><div class="value">${x.v}</div><div class="foot">${x.f}</div></div>`).join("");
 }
 
-// Cover vs window: one series (bars) + a grey reference band per SKU.
-function renderCover(d) {
-  const rows = d.recommendations.filter(r => r.cover != null).sort((a, b) => (a.cover / a.window_min) - (b.cover / b.window_min));
-  if (!rows.length) { $("#cover").innerHTML = '<p class="empty">No run yet.</p>'; return; }
-  const W = Math.max($("#cover").clientWidth || 640, 300), wide = W >= 520;
-  const rowH = 26, top = 8, left = wide ? 210 : 64, right = 40, H = top + rows.length * rowH + 24;
-  const max = Math.ceil(Math.max(...rows.map(r => Math.max(r.cover, r.window_max))) / 2) * 2;
-  const x = v => left + (W - left - right) * v / max;
+let shFilter = "all";
+function renderHealth(d) {
+  const all = d.recommendations.filter(r => r.cover != null);
+  let rows = shFilter === "all" ? all : all.filter(r => state(r) === shFilter);
+  rows = [...rows].sort((a, b) => (a.cover / a.window_min) - (b.cover / b.window_min));
+  if (!rows.length) { $("#health").innerHTML = '<p class="empty">No SKUs in this view.</p>'; return; }
+  const W = Math.max($("#health").clientWidth || 700, 300), wide = W >= 560;
+  const rowH = 34, top = 8, left = wide ? 210 : 78, right = 22, H = top + rows.length * rowH + 26;
+  const max = Math.ceil(Math.max(...all.map(r => Math.max(r.cover, r.window_max, r.projected_cover || 0))) / 4) * 4;
+  const x = v => left + (W - left - right) * Math.min(v, max) / max;
   let g = "";
-  for (let t = 0; t <= max; t += max > 16 ? 4 : 2) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${H - 22}" stroke="var(--grid)"/><text x="${x(t)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--muted)">${t}</text>`;
+  for (let t = 0; t <= max; t += 4) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${H - 22}" stroke="var(--grid)"/><text x="${x(t)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--muted)">${t}${t === max ? " wk" : ""}</text>`;
   rows.forEach((r, i) => {
-    const y = top + i * rowH, bh = 14, by = y + (rowH - bh) / 2, w = Math.max(x(r.cover) - left, 2);
-    const state = r.cover < r.window_min ? "below window" : r.cover > r.window_max ? "above window" : "inside window";
-    const t = `<b>${esc(r.sku)}</b> ${esc(r.name)}<br>Cover ${r.cover} wk · window ${r.window_min}–${r.window_max} wk (${state})<br>${ACTION_LABEL[r.action]}${r.qty ? `: ${fmt(r.qty)} units` : ""}`;
-    g += `<g data-tip="${esc(t)}">
-      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
-      <rect x="${x(r.window_min)}" y="${y + 3}" width="${x(r.window_max) - x(r.window_min)}" height="${rowH - 6}" rx="3" fill="var(--band)"/>
-      <path d="M${left},${by} h${Math.max(w - 4, 0)} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h-${Math.max(w - 4, 0)} z" fill="var(--s1)"/>
-      <text x="${left - 10}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(r.sku)}${wide ? ` <tspan fill="var(--muted)">${esc(short(r.name, 20))}</tspan>` : ""}</text>
-      <text x="${x(r.cover) + 6}" y="${y + rowH / 2 + 4}" font-size="11" fill="var(--ink-2)">${r.cover}</text>
-    </g>`;
+    const y = top + i * rowH, cy = y + rowH / 2, st = STATE[state(r)], proj = r.projected_cover;
+    const t = `<b>${esc(r.sku)}</b> · ${esc(short(r.name, 34))}<br>Cover <b>${r.cover} wk</b> · window ${r.window_min}–${r.window_max} wk<br>${st[1]} · ${A[r.action]}${r.qty ? ` ${fmt(r.qty)} units` : ""}${proj ? `<br>After approved order: <b>${proj} wk</b>` : ""}`;
+    g += `<g class="sh-row" data-sku="${esc(r.sku)}" data-tip="${esc(t)}" tabindex="0">
+      <rect class="sh-bg" x="0" y="${y + 1}" width="${W}" height="${rowH - 2}" rx="8" fill="transparent"/>
+      <text x="10" y="${cy + 4}" font-size="12.5" font-weight="650" fill="var(--ink)">${esc(r.sku)}</text>
+      ${wide ? `<text x="70" y="${cy + 4}" font-size="12" fill="var(--ink-2)">${esc(short(r.name, 21))}</text>` : ""}
+      <line x1="${left}" x2="${W - right}" y1="${cy}" y2="${cy}" stroke="var(--grid)" stroke-width="2" stroke-linecap="round"/>
+      <rect x="${x(r.window_min)}" y="${cy - 8}" width="${Math.max(x(r.window_max) - x(r.window_min), 6)}" height="16" rx="8" fill="var(--band)"/>
+      ${proj ? `<line x1="${x(r.cover)}" x2="${x(proj)}" y1="${cy}" y2="${cy}" stroke="var(--s1)" stroke-width="2" stroke-dasharray="3 3"/><circle cx="${x(proj)}" cy="${cy}" r="6" fill="var(--surface)" stroke="var(--s1)" stroke-width="2.5"/>` : ""}
+      <circle cx="${x(r.cover)}" cy="${cy}" r="7" fill="${st[2]}" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${x(r.cover)}" y="${cy - 11}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-2)">${r.cover}</text></g>`;
   });
-  g += `<line x1="${left}" x2="${left}" y1="${top}" y2="${H - 22}" stroke="var(--axis)"/>`;
-  $("#cover").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" style="max-width:100%" role="img" aria-label="Weeks of cover per SKU against its target window">${g}</svg>
-    <div class="legend"><span><span class="sw" style="background:var(--s1)"></span>Weeks of cover</span><span><span class="sw" style="background:var(--band)"></span>Target window</span><span style="color:var(--muted)">Sorted from most at risk</span></div>`;
-  bindTips($("#cover"));
+  $("#health").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" style="max-width:100%;display:block" role="img" aria-label="Weeks of cover per SKU against target window">${g}</svg>`;
+  bindTips($("#health"));
+  $("#health").querySelectorAll(".sh-row").forEach(el => { el.onclick = () => openDrawer(el.dataset.sku); el.onkeydown = e => { if (e.key === "Enter") openDrawer(el.dataset.sku); }; });
 }
+$("#sh-filter").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; shFilter = b.dataset.f;
+  $("#sh-filter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); DATA && renderHealth(DATA); });
 
-// Actions: one series, horizontal bars, value at the tip.
-function renderActions(d) {
-  const counts = {}; d.recommendations.forEach(r => counts[r.action] = (counts[r.action] || 0) + 1);
-  const rows = ACTION_ORDER.filter(a => counts[a]).map(a => [a, counts[a]]);
-  if (!rows.length) { $("#actions").innerHTML = '<p class="empty">No run yet.</p>'; return; }
-  const W = 340, rowH = 30, left = 118, right = 30, H = rows.length * rowH + 4, max = Math.max(...rows.map(r => r[1]));
-  const x = v => (W - left - right) * v / max;
-  let g = "";
-  rows.forEach(([a, n], i) => {
-    const y = i * rowH, bh = 16, by = y + (rowH - bh) / 2, w = Math.max(x(n), 4);
-    g += `<g data-tip="<b>${ACTION_LABEL[a]}</b><br>${n} SKU${n > 1 ? "s" : ""}">
-      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
-      <text x="${left - 10}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="12" fill="var(--ink)">${ACTION_LABEL[a]}</text>
-      <path d="M${left},${by} h${w - 4} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h-${w - 4} z" fill="var(--s1)"/>
-      <text x="${left + w + 6}" y="${y + rowH / 2 + 4}" font-size="12" fill="var(--ink-2)">${n}</text></g>`;
-  });
-  $("#actions").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="SKUs per recommended action">${g}</svg>`;
-  bindTips($("#actions"));
-}
-
-// Decisions: one stacked bar, 3 categorical slots + neutral grey, 2px surface gaps, legend.
 function renderDecisions(d) {
   const dec = d.summary.decisions, total = d.summary.skus;
   if (!total) { $("#decisions").innerHTML = '<p class="empty">No run yet.</p>'; return; }
-  const parts = [["approve","Approved","var(--s1)"],["override","Overridden","var(--s2)"],["reject","Rejected","var(--s3)"],["undecided","Undecided","var(--undecided)"]];
-  const W = 340, H = 22; let x = 0, g = "";
-  const segs = parts.filter(p => dec[p[0]] > 0);
-  segs.forEach(([k, label, c], i) => {
-    const w = W * dec[k] / total - (i < segs.length - 1 ? 2 : 0);
-    const rx = 4;
-    g += `<rect data-tip="<b>${label}</b><br>${dec[k]} of ${total} SKUs" x="${x}" y="0" width="${Math.max(w, 1)}" height="${H}" rx="${rx}" fill="${c}"/>`;
-    x += w + 2;
-  });
-  $("#decisions").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Decision progress">${g}</svg>
-    <div class="legend">${parts.map(([k, l, c]) => `<span><span class="sw" style="background:${c}"></span>${l} <b style="color:var(--ink)">${dec[k]}</b></span>`).join("")}</div>`;
+  const parts = [["approve", "Approved", "var(--s1)"], ["override", "Overridden", "var(--s2)"], ["reject", "Rejected", "var(--s3)"], ["undecided", "Undecided", "var(--neutral)"]];
+  const R = 52, C = 2 * Math.PI * R, segs = parts.filter(p => dec[p[0]] > 0), gap = segs.length > 1 ? 3 : 0;
+  let off = 0, arcs = "";
+  segs.forEach(([k, l, c]) => { const len = C * dec[k] / total, vis = Math.max(len - gap, 1);
+    arcs += `<circle cx="66" cy="66" r="${R}" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${vis} ${C - vis}" stroke-dashoffset="${-off}" transform="rotate(-90 66 66)" data-tip="<b>${l}</b><br>${dec[k]} of ${total} SKUs"/>`; off += len; });
+  const decided = total - dec.undecided;
+  $("#decisions").innerHTML = `<div class="donut-wrap"><svg viewBox="0 0 132 132" width="100%" style="max-width:132px" role="img" aria-label="${decided} of ${total} decided">
+      <circle cx="66" cy="66" r="${R}" fill="none" stroke="var(--band)" stroke-width="14"/>${arcs}
+      <text x="66" y="66" text-anchor="middle" font-size="26" font-weight="800" fill="var(--ink)">${Math.round(100 * decided / total)}%</text>
+      <text x="66" y="83" text-anchor="middle" font-size="10.5" fill="var(--muted)">${decided} of ${total} decided</text></svg>
+    <div class="dl">${parts.map(([k, l, c]) => `<div><span style="display:inline-flex;align-items:center;gap:8px"><span class="sw" style="background:${c}"></span>${l}</span><b>${dec[k]}</b></div>`).join("")}</div></div>`;
   bindTips($("#decisions"));
 }
 
-function renderZoho(d) {
-  const p = d.zoho.pushes || [];
-  const head = `<dl class="kv"><dt>On-order sync</dt><dd>${d.zoho.last_sync ? when(d.zoho.last_sync) : "not synced"}</dd><dt>SKUs on order</dt><dd>${d.zoho.skus_with_on_order}</dd></dl>`;
-  if (!p.length) { $("#zoho").innerHTML = head + '<p class="empty" style="margin-top:12px">No draft POs sent from the live app yet.</p>'; return; }
-  const kind = {created:"good", skipped:"warning", failed:"critical"};
-  $("#zoho").innerHTML = head + `<table style="margin-top:12px"><tr><th>PO</th><th>Reference</th><th class="num">Units</th><th>Result</th></tr>` +
-    p.slice(0, 6).map(x => `<tr><td>${esc(x.zoho_po_number || "–")}</td><td>${esc(x.reference_number)}</td><td class="num">${fmt(x.total_qty)}</td><td>${chip(kind[x.status], x.status)}</td></tr>`).join("") + `</table>`;
+function hbars(el, rows, unit) {
+  if (!rows.length) { el.innerHTML = '<p class="empty">Nothing to show.</p>'; return; }
+  const max = Math.max(...rows.map(r => r[1]), 1);
+  el.innerHTML = rows.map(([l, v]) => `<div data-tip="<b>${esc(l)}</b><br>${fmt(v)} ${unit}" style="display:grid;grid-template-columns:118px 1fr 48px;gap:10px;align-items:center;margin:8px 0">
+      <span style="font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l)}</span>
+      <span style="height:12px;background:var(--band);border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:${Math.max(100 * v / max, 3)}%;background:var(--s1);border-radius:0 6px 6px 0"></span></span>
+      <b style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px">${fmt(v)}</b></div>`).join("");
+  bindTips(el);
 }
+function renderActions(d) { const c = {}; d.recommendations.forEach(r => c[r.action] = (c[r.action] || 0) + 1); hbars($("#actions"), ORDER.filter(a => c[a]).map(a => [A[a], c[a]]), "SKUs"); }
+function renderRegions(d) { const c = {}; d.recommendations.filter(r => r.qty > 0).forEach(r => c[r.region || "Unknown"] = (c[r.region || "Unknown"] || 0) + r.qty); hbars($("#regions"), Object.entries(c).sort((a, b) => b[1] - a[1]), "units"); }
 
+function renderZoho(d) {
+  const all = d.zoho.pushes || [], p = all.filter(x => x.status !== "skipped"), dup = all.length - p.length;
+  const body = p.length ? p.slice(0, 3).map(x => `<div class="po"><div class="doc">${ICON.doc}</div>
+      <div><div class="pn">${esc(x.zoho_po_number || "–")} ${x.status === "created" ? chip("good", "Draft") : chip("critical", "Failed")}</div><div class="ref">${esc(x.reference_number)} · ${x.line_count} lines · ${when(x.pushed_at)}</div></div>
+      <div class="u">${fmt(x.total_qty)}<div style="font-size:11px;color:var(--muted);font-weight:500">units</div></div></div>`).join("")
+    : '<p class="empty">No draft POs sent from the app yet. They appear here once Raghav sends approved orders.</p>';
+  $("#zoho").innerHTML = body + `<dl class="kv"><dt>Duplicate sends blocked</dt><dd>${dup}</dd><dt>SKUs with stock on order</dt><dd>${d.zoho.skus_with_on_order}</dd></dl>`;
+}
 function renderBacktest(d) {
   const b = d.backtest;
   if (!b) { $("#backtest").innerHTML = '<p class="empty">No backtest yet.</p>'; return; }
-  const kind = b.gate_status === "PASS" ? "good" : b.gate_status === "FAIL" ? "critical" : "warning";
-  const label = b.gate_status === "NOT_EVALUABLE" ? "Not evaluable" : b.gate_status;
-  $("#backtest").innerHTML = `<div style="margin-bottom:10px">${chip(kind, label)}</div>
-    <p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">${esc(b.gate_message || "")}</p>
-    <dl class="kv"><dt>Weeks replayed</dt><dd>${b.decision_weeks}</dd><dt>Avg flip rate</dt><dd>${Math.round((b.avg_flip_rate || 0) * 100)}% week to week</dd>
-    <dt>Confidence</dt><dd>${b.low_confidence ? "Low (short history)" : "OK"}</dd><dt>Ran</dt><dd>${when(b.ran_at)}</dd></dl>`;
+  const ev = b.gate_status === "PASS" || b.gate_status === "FAIL", rate = b.match_rate || 0;
+  const R = 62, cx = 78, cy = 76, pt = (a, r = R) => [cx + r * Math.cos(Math.PI * (1 - a)), cy - r * Math.sin(Math.PI * (1 - a))];
+  const arc = (a0, a1) => { const [x0, y0] = pt(a0), [x1, y1] = pt(a1); return `M${x0},${y0} A${R},${R} 0 0 1 ${x1},${y1}`; };
+  const [t0x, t0y] = pt(0.8, R - 10), [t1x, t1y] = pt(0.8, R + 10), [lx, ly] = pt(0.8, R + 16);
+  const st = b.gate_status === "PASS" ? "good" : b.gate_status === "FAIL" ? "critical" : "warning";
+  $("#backtest").innerHTML = `<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <svg viewBox="0 0 160 92" width="160" height="92" role="img" aria-label="Backtest match rate gauge">
+      <defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--band)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--axis)" stroke-width="1.5"/></pattern></defs>
+      <path d="${arc(0, 1)}" fill="none" stroke="${ev ? "var(--band)" : "url(#hatch)"}" stroke-width="14" stroke-linecap="round"/>
+      ${ev ? `<path d="${arc(0, Math.max(Math.min(rate, 1), 0.01))}" fill="none" stroke="var(--s1)" stroke-width="14" stroke-linecap="round"/>` : ""}
+      <line x1="${t0x}" y1="${t0y}" x2="${t1x}" y2="${t1y}" stroke="var(--ink)" stroke-width="2"/>
+      <text x="${lx}" y="${ly}" font-size="10" fill="var(--muted)" text-anchor="start">80%</text>
+      <text x="${cx}" y="${cy - 8}" text-anchor="middle" font-size="20" font-weight="800" fill="var(--ink)">${ev ? Math.round(rate * 100) + "%" : "—"}</text>
+      <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-size="10" fill="var(--muted)">match rate</text></svg>
+    <div style="flex:1;min-width:120px">${chip(st, b.gate_status === "NOT_EVALUABLE" ? "Not evaluable" : b.gate_status)}
+      <p style="margin:8px 0 0;font-size:12.5px;color:var(--ink-2)">${ev ? esc(b.gate_message || "") : "Needs Raghav's past decisions. The number is never guessed."}</p></div></div>
+    <dl class="kv"><dt>Weeks replayed</dt><dd>${b.decision_weeks}</dd><dt>Week-to-week flip rate</dt><dd>${Math.round((b.avg_flip_rate || 0) * 100)}%</dd><dt>Confidence</dt><dd>${b.low_confidence ? "Low · short history" : "OK"}</dd></dl>`;
 }
-
+function nextRun() {
+  const n = new Date();
+  for (let i = 0; i < 8; i++) { const t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + i, 1, 30)); if ([1, 4].includes(t.getUTCDay()) && t > n) return t.toLocaleString("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); }
+  return "–";
+}
 function renderRuns(d) {
-  if (!d.runs.length) { $("#runs").innerHTML = '<p class="empty">No runs yet.</p>'; return; }
-  const kind = {ok:"good", blocked:"warning", error:"critical"};
-  $("#runs").innerHTML = `<table><tr><th>Run</th><th>Date</th><th>By</th><th>Status</th></tr>` +
-    d.runs.slice(0, 7).map(r => `<tr><td>#${r.id}</td><td>${esc(r.run_date)}</td><td>${esc(r.triggered_by)}</td><td>${chip(kind[r.status], r.status)}</td></tr>`).join("") + `</table>`;
+  const runs = [...(d.runs || [])].reverse().slice(-7);
+  if (!runs.length) { $("#runs").innerHTML = '<p class="empty">No runs yet.</p>'; return; }
+  const k = { ok: "good", blocked: "warning", error: "critical" }, ic = { ok: "✓", blocked: "!", error: "×" };
+  $("#runs").innerHTML = `<div class="timeline">${runs.map(r => `<div class="tl" data-tip="<b>Run #${r.id}</b> · ${esc(r.status)}<br>${esc(r.triggered_by)} · ${when(r.finished_at)}<br>on-order: ${esc(r.on_order_source)}">
+      <div class="dot" style="background:${ST[k[r.status]][0]}">${ic[r.status]}</div><div class="n">#${r.id}</div><div class="dt">${esc((r.run_date || "").slice(5).replace("-", "/"))}</div></div>`).join("")}</div>
+    <dl class="kv"><dt>Last run</dt><dd>${when(d.latest_any_run?.finished_at)}</dd><dt>On-order source</dt><dd>${d.latest_run?.on_order_source?.startsWith("Zoho") ? "Zoho (live)" : "None"}</dd><dt>Next scheduled</dt><dd>${nextRun()}</dd></dl>`;
+  bindTips($("#runs"));
 }
 
+let tFilter = "all", sortKey = "risk", sortDir = 1;
+const COLS = [["sku", "SKU"], ["name", "Product"], ["region", "Region"], ["action", "Action"], ["qty", "Qty", 1], ["risk", "Cover / window", 1], ["change_pct", "4w vs 12w", 1], ["on_order", "On order", 1], ["decision", "Decision"]];
 function renderTable(d) {
-  const rows = [...d.recommendations].sort((a, b) => ACTION_ORDER.indexOf(a.action) - ACTION_ORDER.indexOf(b.action) || (a.cover ?? 0) - (b.cover ?? 0));
-  if (!rows.length) { $("#table").innerHTML = '<p class="empty">No run yet.</p>'; return; }
-  const decLabel = {approve:"Approved", override:"Overridden", reject:"Rejected"};
-  $("#table").innerHTML = `<table><tr><th>SKU</th><th>Name</th><th>Region</th><th>Perish.</th><th>Action</th><th class="num">Qty</th><th class="num">Cover (wk)</th><th>Window</th><th class="num">4w vs 12w</th><th class="num">On hand</th><th class="num">On order</th><th>Queue</th><th>Decision</th></tr>` +
-    rows.map(r => `<tr><td>${esc(r.sku)}</td><td>${esc((r.name || "").replace("Freshroots ", ""))}</td><td>${esc(r.region || "–")}</td><td>${esc(r.perishability || "–")}</td>
-      <td>${ACTION_LABEL[r.action] || esc(r.action)}</td><td class="num">${r.qty ? fmt(r.qty) : "–"}</td><td class="num">${r.cover ?? "–"}</td>
-      <td>${r.window_min}–${r.window_max}</td><td class="num">${r.change_pct == null ? "–" : (r.change_pct > 0 ? "+" : "") + r.change_pct + "%"}</td>
-      <td class="num">${fmt(r.on_hand)}</td><td class="num">${fmt(r.on_order)}</td><td>${r.route === "EXCEPTION_QUEUE" ? chip("warning", "Exception") : "Approve"}</td>
-      <td>${r.decision ? esc(decLabel[r.decision]) + (r.decision === "override" ? ` (${fmt(r.final_qty)})` : "") : '<span style="color:var(--muted)">–</span>'}</td></tr>`).join("") + `</table>`;
+  const q = ($("#q").value || "").toLowerCase().trim();
+  let rows = d.recommendations.filter(r => {
+    if (tFilter === "reorder" && !r.action.startsWith("REORDER")) return false;
+    if (tFilter === "pause" && r.action !== "PAUSE_NEXT_ORDER") return false;
+    if (tFilter === "none" && r.action !== "NO_ACTION") return false;
+    if (tFilter === "exception" && r.route !== "EXCEPTION_QUEUE") return false;
+    return !q || [r.sku, r.name, r.region, r.category, A[r.action]].join(" ").toLowerCase().includes(q);
+  });
+  const val = r => sortKey === "risk" ? (r.cover ?? 99) / (r.window_min || 1) : sortKey === "action" ? ORDER.indexOf(r.action) : r[sortKey];
+  rows.sort((a, b) => { const x = val(a), y = val(b); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  const head = COLS.map(([k, l, n]) => `<th class="${n ? "num" : ""}" data-k="${k}" ${sortKey === k ? `aria-sort="${sortDir > 0 ? "ascending" : "descending"}"` : ""}>${l}<span class="ar">${sortKey === k ? (sortDir > 0 ? "▲" : "▼") : "↕"}</span></th>`).join("");
+  const body = rows.map(r => { const st = STATE[state(r)], pct = Math.min(100, 100 * (r.cover || 0) / Math.max(r.window_max * 1.5, 1));
+    return `<tr data-sku="${esc(r.sku)}" tabindex="0"><td class="sku">${esc(r.sku)}</td><td class="nm">${esc(short(r.name, 28))}</td><td>${esc(r.region || "–")}</td>
+      <td>${esc(A[r.action] || r.action)}${r.route === "EXCEPTION_QUEUE" ? " " + chip("warning", "Exception") : ""}</td>
+      <td class="num">${r.qty ? fmt(r.qty) : "–"}</td>
+      <td class="num"><span class="minibar" title="${st[1]}"><i style="width:${pct}%;background:${st[2]}"></i></span>${r.cover ?? "–"} <span style="color:var(--muted)">/ ${r.window_min}–${r.window_max}</span></td>
+      <td class="num">${r.change_pct == null ? "–" : (r.change_pct > 0 ? "+" : "") + r.change_pct + "%"}</td>
+      <td class="num">${fmt(r.on_order)}</td>
+      <td>${r.decision ? chip(DEC[r.decision][0], DEC[r.decision][1] + (r.decision === "override" ? ` · ${fmt(r.final_qty)}` : "")) : '<span style="color:var(--muted)">Pending</span>'}</td></tr>`; }).join("");
+  $("#table").innerHTML = rows.length ? `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>` : '<p class="empty">No SKUs match.</p>';
+  $("#table").querySelectorAll("th").forEach(th => th.onclick = () => { const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : 1; sortKey = k; renderTable(DATA); });
+  $("#table").querySelectorAll("tbody tr").forEach(tr => { tr.onclick = () => openDrawer(tr.dataset.sku); tr.onkeydown = e => { if (e.key === "Enter") openDrawer(tr.dataset.sku); }; });
 }
+$("#q").addEventListener("input", () => DATA && renderTable(DATA));
+$("#t-filter").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; tFilter = b.dataset.f;
+  $("#t-filter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); DATA && renderTable(DATA); });
+
+function openDrawer(sku) {
+  const r = DATA.recommendations.find(x => x.sku === sku); if (!r) return;
+  const st = STATE[state(r)], max = Math.max(r.window_max * 1.6, r.cover || 0, r.projected_cover || 0) * 1.05, p = v => Math.min(100, 100 * v / max);
+  $("#drawer").innerHTML = `<div class="dh"><button class="close" data-close aria-label="Close">✕</button>
+      <div style="color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.05em">${esc(r.sku)} · ${esc(r.category || "")}</div>
+      <h3 id="d-title">${esc((r.name || "").replace("Freshroots ", ""))}</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${chip(st[0], st[1])}${chip("plain", A[r.action])}${chip("plain", (r.perishability === "High" ? "High" : "Low") + " perishability")}${chip("plain", r.region || "–")}${r.route === "EXCEPTION_QUEUE" ? chip("warning", "Exception queue") : ""}</div></div>
+    <div class="db">
+      <div><div style="font-size:12.5px;color:var(--ink-2);margin-bottom:8px">Weeks of cover vs the ${r.window_min}–${r.window_max} week window</div>
+        <div style="position:relative;height:30px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px">
+          <div style="position:absolute;top:6px;bottom:6px;left:${p(r.window_min)}%;width:${p(r.window_max) - p(r.window_min)}%;background:var(--band);border-radius:6px"></div>
+          <div style="position:absolute;top:10px;height:10px;left:0;width:${p(r.cover || 0)}%;background:${st[2]};border-radius:0 5px 5px 0"></div>
+          ${r.projected_cover ? `<div style="position:absolute;top:6px;width:16px;height:16px;border-radius:50%;border:2.5px solid var(--s1);background:var(--surface);left:calc(${p(r.projected_cover)}% - 8px)"></div>` : ""}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px"><span>Now <b style="color:var(--ink)">${r.cover} wk</b></span>${r.projected_cover ? `<span>After approved order <b style="color:var(--s1)">${r.projected_cover} wk</b></span>` : ""}</div></div>
+      <div class="mgrid">
+        <div class="m"><div class="l">Recommended</div><div class="x">${r.qty ? fmt(r.qty) + " units" : "–"}</div></div>
+        <div class="m"><div class="l">Decision</div><div class="x" style="font-size:14px;margin-top:3px">${r.decision ? chip(DEC[r.decision][0], DEC[r.decision][1] + (r.final_qty != null ? ` · ${fmt(r.final_qty)}` : "")) : "Pending"}</div></div>
+        <div class="m"><div class="l">On hand</div><div class="x">${fmt(r.on_hand)}</div></div>
+        <div class="m"><div class="l">On order (Zoho)</div><div class="x">${fmt(r.on_order)}</div></div>
+        <div class="m"><div class="l">4-week avg / wk</div><div class="x">${fmt(r.avg_4w)}</div></div>
+        <div class="m"><div class="l">12-week avg / wk</div><div class="x">${fmt(r.avg_12w)}</div></div>
+        <div class="m"><div class="l">Demand change</div><div class="x">${r.change_pct == null ? "–" : (r.change_pct > 0 ? "+" : "") + r.change_pct + "%"}</div></div>
+        <div class="m"><div class="l">Expected / wk (+${r.uplift_pct || 0}% uplift)</div><div class="x">${fmt(r.expected)}</div></div>
+      </div>
+      <div><div style="font-size:12.5px;color:var(--ink-2);margin-bottom:8px">Why the engine recommends this</div><div class="reason">${esc(r.reason || "–")}</div></div>
+    </div>`;
+  document.getElementById("drawer-root").classList.add("open");
+  $("#drawer .close").focus();
+}
+const closeDrawer = () => document.getElementById("drawer-root").classList.remove("open");
+document.getElementById("drawer-root").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeDrawer(); });
+addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 
 async function load() {
-  $("#updated").textContent = "Loading live data…";
+  $("#live").classList.remove("stale");
   try {
-    const r = await fetch("/api/metrics", {cache: "no-store"});
-    const d = await r.json();
-    if (!r.ok || d.error) throw new Error(d.error || r.status);
-    last = d; renderAlerts(d); renderTiles(d); renderCover(d); renderActions(d); renderDecisions(d);
-    renderZoho(d); renderBacktest(d); renderRuns(d); renderTable(d);
-    $("#updated").textContent = `Live · updated ${when(d.generated_at)}`;
+    const res = await fetch("/api/metrics", { cache: "no-store" }), d = await res.json();
+    if (!res.ok || d.error) throw new Error(d.error || res.status);
+    DATA = d;
+    renderHero(d); renderPipeline(d); renderAlerts(d); renderKpis(d); renderHealth(d); renderDecisions(d);
+    renderActions(d); renderRegions(d); renderZoho(d); renderBacktest(d); renderRuns(d); renderTable(d);
+    $("#updated").textContent = `Live · ${when(d.generated_at)}`;
   } catch (e) {
-    $("#updated").textContent = "Live data unavailable right now.";
-    $("#alerts").innerHTML = `<div class="alert"><span class="ic" style="background:var(--critical)">×</span><div>Could not load metrics. Try Refresh in a minute.</div></div>`;
+    $("#live").classList.add("stale"); $("#updated").textContent = "Live data unavailable";
+    $("#alerts").innerHTML = `<div class="alert"><span class="ic" style="background:var(--critical)">×</span><div>Could not load live metrics. It retries every 5 minutes, or press Refresh.</div></div>`;
   }
 }
 $("#refresh").onclick = load;
-let last = null, rt;
-addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => last && renderCover(last), 150); });
-load();
-setInterval(load, 5 * 60 * 1000);
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && renderHealth(DATA), 150); });
+load(); setInterval(load, 5 * 60 * 1000);
 </script>
 </body>
 </html>

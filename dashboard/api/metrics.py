@@ -62,7 +62,7 @@ def build_metrics(fetch) -> dict:
     ok_runs = [r for r in runs if r["status"] == "ok"]
     latest_ok = ok_runs[-1] if ok_runs else None
 
-    skus = {s["sku_id"]: s for s in fetch("skus", {"select": "sku_id,sku_name,perishability,distributor_id"})}
+    skus = {s["sku_id"]: s for s in fetch("skus", {"select": "sku_id,sku_name,category,perishability,distributor_id"})}
     regions = {d["distributor_id"]: d["region"] for d in fetch("distributors", {"select": "distributor_id,region"})}
     assumptions = fetch("assumptions", {"select": "key,signed_off_at"})
 
@@ -72,7 +72,7 @@ def build_metrics(fetch) -> dict:
         raw = fetch("recommendations", {"run_id": f"eq.{rid}", "order": "id.asc",
                                         "select": "sku,route,action,recommended_qty,on_hand,on_order,avg_4w,avg_12w,"
                                                   "demand_change_pct,festival_uplift_pct,expected_weekly,"
-                                                  "weeks_of_cover,cover_window,exceptions"})
+                                                  "weeks_of_cover,cover_window,exceptions,reason"})
         dec = fetch("decisions", {"run_id": f"eq.{rid}", "order": "id.asc",
                                   "select": "id,sku,decision,final_action,final_qty"})
         latest_dec = {}
@@ -82,8 +82,15 @@ def build_metrics(fetch) -> dict:
             s = skus.get(r["sku"], {})
             lo, hi = (str(r.get("cover_window") or "0-0").split("-") + ["0"])[:2]
             d = latest_dec.get(r["sku"])
+            expected = _num(r.get("expected_weekly"))
+            qty_after = (d["final_qty"] or 0) if d and d["decision"] in ("approve", "override") else 0
+            projected = None
+            if expected and qty_after:
+                projected = round(((r.get("on_hand") or 0) + (r.get("on_order") or 0) + qty_after) / expected, 1)
             recs.append({
-                "sku": r["sku"], "name": s.get("sku_name"), "perishability": s.get("perishability"),
+                "sku": r["sku"], "name": s.get("sku_name"), "category": s.get("category"),
+                "perishability": s.get("perishability"), "expected": expected, "projected_cover": projected,
+                "reason": r.get("reason"),
                 "region": regions.get(s.get("distributor_id")), "route": r["route"], "action": r["action"],
                 "qty": int(r.get("recommended_qty") or 0), "on_hand": r.get("on_hand"), "on_order": r.get("on_order"),
                 "avg_4w": _num(r.get("avg_4w")), "avg_12w": _num(r.get("avg_12w")),
@@ -110,6 +117,7 @@ def build_metrics(fetch) -> dict:
     if bt:
         m = bt[0]["metrics"] or {}
         backtest = {"gate_status": bt[0]["gate_status"], "gate_message": (m.get("gate") or {}).get("message"),
+                    "match_rate": (m.get("gate") or {}).get("match_rate"),
                     "avg_flip_rate": m.get("avg_flip_rate"), "low_confidence": m.get("low_confidence"),
                     "decision_weeks": len(m.get("decision_weeks") or []), "ran_at": bt[0]["ran_at"]}
 
@@ -118,6 +126,20 @@ def build_metrics(fetch) -> dict:
         gaps = len(fetch("data_gaps", {"run_id": f"eq.{latest_any['id']}", "select": "id"}))
 
     reorder = [r for r in recs if r["action"] in ("REORDER_NOW", "REORDER_1.5X")]
+
+    # Trend across the last 8 successful runs (reorder units / SKUs per run)
+    trend = []
+    recent = ok_runs[-8:]
+    if recent:
+        ids = ",".join(str(r["id"]) for r in recent)
+        rows = fetch("recommendations", {"run_id": f"in.({ids})", "select": "run_id,action,recommended_qty"})
+        for run in recent:
+            mine = [x for x in rows if x["run_id"] == run["id"]]
+            ro = [x for x in mine if x["action"] in ("REORDER_NOW", "REORDER_1.5X")]
+            trend.append({"run_id": run["id"], "run_date": run["run_date"],
+                          "reorder_units": sum(int(x.get("recommended_qty") or 0) for x in ro),
+                          "reorder_skus": len(ro),
+                          "pause_skus": sum(1 for x in mine if x["action"] == "PAUSE_NEXT_ORDER")})
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "latest_run": _run_view(latest_ok),
@@ -131,6 +153,7 @@ def build_metrics(fetch) -> dict:
             "decisions": decisions_summary,
         },
         "recommendations": recs,
+        "trend": trend,
         "runs": [_run_view(r) for r in runs[-12:]][::-1],
         "zoho": {"last_sync": last_sync, "skus_with_on_order": skus_on_order,
                  "pushes": [{k: p.get(k) for k in ("run_id", "reference_number", "zoho_po_number", "status",

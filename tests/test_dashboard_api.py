@@ -20,6 +20,9 @@ def fake_fetch(db):
         for k, v in (params or {}).items():
             if isinstance(v, str) and v.startswith("eq."):
                 rows = [r for r in rows if str(r.get(k)) == v[3:]]
+            if isinstance(v, str) and v.startswith("in.("):
+                allowed = set(v[4:-1].split(","))
+                rows = [r for r in rows if str(r.get(k)) in allowed]
         return rows
     return fetch
 
@@ -41,6 +44,9 @@ def test_metrics_aggregate_latest_run_and_hide_people():
     assert m["assumptions"] == {"signed": 6, "total": 6}
     r = {x["sku"]: x for x in m["recommendations"]}
     assert r["SKU006"]["final_qty"] == 40 and r["SKU004"]["window_min"] == 3.0
+    # SKU001: (900 + 0 + 750) / 268.6 = 6.1 weeks after the approved order
+    assert r["SKU001"]["projected_cover"] == 6.1 and r["SKU002"]["projected_cover"] is None
+    assert m["trend"] == [{"run_id": rid, "run_date": RUN_DATE, "reorder_units": 1820, "reorder_skus": 5, "pause_skus": 2}]
     blob = json.dumps(m, default=str)
     for leak in ("raghav@", "secret note", "private", "decided_by", "pushed_by"):
         assert leak not in blob
