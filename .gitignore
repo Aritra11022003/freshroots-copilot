@@ -6,3 +6,4 @@ __pycache__/
 .streamlit/secrets.toml
 freshroots-rules-engine/output/
 .DS_Store
+.vercel

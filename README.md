@@ -2,7 +2,8 @@
 
 [![Replenishment run](https://github.com/Aritra11022003/freshroots-copilot/actions/workflows/run.yml/badge.svg)](https://github.com/Aritra11022003/freshroots-copilot/actions/workflows/run.yml)
 
-**Live app:** https://freshroots-copilot.streamlit.app/
+**Live app:** https://freshroots-copilot.streamlit.app/ (Raghav and procurement)  
+**Ops dashboard:** https://freshroots-dashboard.vercel.app/ (read-only, live)
 
 Twice a week, a scheduled job reads sales and stock from Supabase, checks the data, applies Raghav's 5 written rules to every SKU, and saves one recommendation per SKU. Raghav approves, overrides or rejects each one in a web app. Procurement downloads only the approved rows as a CSV and imports it into Zoho Inventory. **The system never places an order.**
 
@@ -118,6 +119,19 @@ ZOHO_API_BASE = "https://www.zohoapis.in/inventory/v1"
 **Free-plan limits (checked 2026-10-22, [Zoho pricing comparison](https://www.zoho.com/us/inventory/pricing-comparison/)):** 20 purchase orders a month, 1,000 API calls a day, 1 user. One draft per vendor per run at 2 runs a week is about 8 POs a month. Check the current limits before going live.
 
 Drafts with references `FRC-TEST-*` (from `scripts/zoho_live_test.py`) and `FRC-DEMO-*` (from demo mode) never count as on-order stock.
+
+## Ops dashboard (Vercel)
+
+`dashboard/` is a read-only, public page for Deepa, the CEO and reviewers. It shows:
+- units to reorder, as the headline number
+- SKUs to pause, exceptions, decisions made, assumptions signed and draft POs created
+- weeks of cover against each SKU's window, the action mix and decision progress
+- Zoho drafts, the backtest gate, recent runs and the full SKU table
+
+- **`dashboard/api/metrics.py`** is a Vercel Python function. The Supabase key exists only there, as Vercel env vars `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It returns aggregates and per-SKU numbers, never people's names, emails or notes (tested in `tests/test_dashboard_api.py`). Its queries are fixed, and responses are cached at the edge for 2 minutes.
+- **`dashboard/index.html`** is one static page with no framework, in light and dark mode, readable on a phone.
+- **Preview locally:** `.venv/bin/python dashboard/dev_server.py`, then open http://localhost:8600.
+- **Deploy:** run `cd dashboard && npx vercel deploy --prod`. The Vercel project is `freshroots-dashboard`, with root directory `dashboard/`.
 
 ## Using it
 
