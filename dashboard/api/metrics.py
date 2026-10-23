@@ -62,7 +62,7 @@ def build_metrics(fetch) -> dict:
     ok_runs = [r for r in runs if r["status"] == "ok"]
     latest_ok = ok_runs[-1] if ok_runs else None
 
-    skus = {s["sku_id"]: s for s in fetch("skus", {"select": "sku_id,sku_name,category,perishability,distributor_id"})}
+    skus = {s["sku_id"]: s for s in fetch("skus", {"select": "sku_id,sku_name,category,perishability,distributor_id,standard_reorder_qty"})}
     regions = {d["distributor_id"]: d["region"] for d in fetch("distributors", {"select": "distributor_id,region"})}
     assumptions = fetch("assumptions", {"select": "key,signed_off_at"})
 
@@ -90,7 +90,7 @@ def build_metrics(fetch) -> dict:
             recs.append({
                 "sku": r["sku"], "name": s.get("sku_name"), "category": s.get("category"),
                 "perishability": s.get("perishability"), "expected": expected, "projected_cover": projected,
-                "reason": r.get("reason"),
+                "reason": r.get("reason"), "std_qty": s.get("standard_reorder_qty"),
                 "region": regions.get(s.get("distributor_id")), "route": r["route"], "action": r["action"],
                 "qty": int(r.get("recommended_qty") or 0), "on_hand": r.get("on_hand"), "on_order": r.get("on_order"),
                 "avg_4w": _num(r.get("avg_4w")), "avg_12w": _num(r.get("avg_12w")),

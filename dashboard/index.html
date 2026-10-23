@@ -156,12 +156,61 @@
   @keyframes sk { to { background-position: -200% 0; } }
   footer { color: var(--muted); font-size: 12px; text-align: center; padding: 0 0 32px; }
   :focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+  .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--ring); border-radius: 14px; padding: 5px; margin: 0 0 18px; box-shadow: var(--shadow); overflow-x: auto; position: sticky; top: 10px; z-index: 5; }
+  .tabs button { border: 0; background: none; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 550; color: var(--ink-2); white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; transition: background .15s, color .15s; }
+  .tabs button:hover { background: var(--hover); color: var(--ink); }
+  .tabs button[aria-selected="true"] { background: linear-gradient(135deg, var(--brand-1), var(--brand-2)); color: var(--brand-ink); box-shadow: 0 2px 8px rgba(14,59,44,.25); }
+  .tabs .ti { font-size: 13px; }
+  .tabpanel { animation: fadein .25s ease; } @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .ghostbtn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 6px 12px; cursor: pointer; font-size: 12.5px; font-weight: 550; }
+  .ghostbtn:hover { background: var(--hover); }
+  .ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+  .ctrl { display: grid; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  .ctrl > span:first-child { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .ctrl output { font-weight: 750; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--s1); }
+  .ctrl small { color: var(--muted); font-size: 11.5px; }
+  input[type=range] { width: 100%; accent-color: var(--s1); height: 22px; cursor: pointer; }
+  .switch { position: relative; width: 44px; height: 24px; display: inline-block; }
+  .switch input { opacity: 0; width: 100%; height: 100%; position: absolute; margin: 0; cursor: pointer; z-index: 1; }
+  .switch i { position: absolute; inset: 0; background: var(--axis); border-radius: 999px; transition: background .2s; }
+  .switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .switch input:checked + i { background: var(--s1); } .switch input:checked + i::after { transform: translateX(20px); }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+  .presets button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 12.5px; color: var(--ink); transition: transform .1s, background .15s; }
+  .presets button:hover { background: var(--hover); transform: translateY(-1px); }
+  .presets button.on { border-color: var(--s1); background: var(--s1-wash); }
+  .pill { font-size: 12px; font-weight: 650; padding: 4px 10px; border-radius: 999px; background: var(--s1-wash); color: var(--s1); }
+  .delta { font-size: 12px; font-weight: 650; margin-left: 6px; }
+  .delta.up { color: var(--critical); } .delta.down { color: var(--good-text); } .delta.same { color: var(--muted); }
+  .simk { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chg { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 4px; border-top: 1px solid var(--line); }
+  .chg:first-child { border-top: 0; }
+  .arrow { color: var(--muted); }
+  .quick { display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 4px 10px; cursor: pointer; font-size: 12px; display: inline-flex; gap: 6px; align-items: center; }
+  .quick button.on { border-color: var(--s1); background: var(--s1-wash); font-weight: 650; }
+  .quick button:hover { background: var(--hover); }
+  select { border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; width: 100%; cursor: pointer; }
+  .flow { display: grid; gap: 0; position: relative; }
+  .rstep { display: grid; grid-template-columns: 54px 1fr; gap: 14px; position: relative; }
+  .rstep .rail { display: flex; flex-direction: column; align-items: center; }
+  .rstep .num { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--surface); border: 2px solid var(--line); color: var(--ink-2); z-index: 1; transition: all .3s; }
+  .rstep .line { flex: 1; width: 2px; background: var(--line); margin: 2px 0; min-height: 14px; }
+  .rstep.hit .num { background: var(--s1); border-color: var(--s1); color: #fff; box-shadow: 0 0 0 5px var(--s1-wash); }
+  .rstep .body { margin-bottom: 14px; }
+  .rstep .card { padding: 14px 16px; }
+  .rstep h3 { margin: 0 0 4px; font-size: 14px; } .rstep p { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+  .calc { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+  .calc code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; }
+  .verdict { padding: 18px 20px; display: flex; gap: 14px; align-items: center; background: linear-gradient(135deg, var(--brand-1), var(--brand-2)); color: var(--brand-ink); border-radius: 16px; box-shadow: var(--shadow); }
+  .verdict .vbig { font-size: 22px; font-weight: 800; }
   @media (max-width: 1040px) {
     .pipeline { grid-template-columns: repeat(2, 1fr); gap: 16px 0; } .step + .step { border-left: 0; }
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .grid-main, .grid-3 { grid-template-columns: 1fr; }
     .headline { grid-template-columns: 1fr; } .spark-wrap { justify-self: start; text-align: left; }
   }
+  @media (max-width: 700px) { .ctrls { grid-template-columns: 1fr; } .chg { grid-template-columns: 1fr auto; } }
   @media (max-width: 560px) {
     .wrap { padding: 0 16px; } .pipeline { grid-template-columns: 1fr; } .kpis { grid-template-columns: 1fr; }
     .big { font-size: 48px; } .donut-wrap { grid-template-columns: 112px 1fr; } .search { min-width: 0; flex: 1; }
@@ -182,7 +231,6 @@
         <span class="live" id="live"><span class="pulse"></span><span id="updated">Connecting…</span></span>
         <button class="btn" id="refresh" title="Refresh now">↻ Refresh</button>
         <button class="btn" id="theme" title="Toggle light / dark">◐ Theme</button>
-        <a class="btn" href="https://github.com/Aritra11022003/freshroots-copilot" target="_blank" rel="noopener">GitHub</a>
         <a class="btn solid" href="https://freshroots-copilot.streamlit.app/" target="_blank" rel="noopener">Open the app →</a>
       </div>
     </div>
@@ -201,6 +249,13 @@
   <section class="pipeline" id="pipeline" aria-label="Pipeline status"><div class="sk" style="height:48px;grid-column:1/-1;margin:0 12px"></div></section>
   <main>
     <div class="alerts" id="alerts"></div>
+    <nav class="tabs" role="tablist" aria-label="Dashboard views" id="tabs">
+      <button role="tab" aria-selected="true" data-tab="overview"><span class="ti">◉</span>Overview</button>
+      <button role="tab" aria-selected="false" data-tab="simulator"><span class="ti">⚡</span>What-if simulator</button>
+      <button role="tab" aria-selected="false" data-tab="planner"><span class="ti">🎯</span>Order planner</button>
+      <button role="tab" aria-selected="false" data-tab="rules"><span class="ti">🧭</span>How the rules decide</button>
+    </nav>
+    <div class="tabpanel" id="tab-overview" role="tabpanel">
     <section class="kpis" id="kpis"></section>
     <section class="grid-main">
       <div class="card panel">
@@ -245,6 +300,62 @@
       </div>
       <div class="tablewrap" id="table"></div>
     </section>
+    </div>
+
+    <!-- ===== What-if simulator ===== -->
+    <div class="tabpanel" id="tab-simulator" role="tabpanel" hidden>
+      <div class="grid-main">
+        <div class="card panel">
+          <div class="ph"><div><h2>What-if simulator</h2><p>Change the world, and Raghav's 5 rules re-run instantly in your browser. Nothing is saved or ordered.</p></div>
+            <button class="ghostbtn" id="sim-reset">↺ Reset to today</button></div>
+          <div class="ctrls">
+            <label class="ctrl"><span><b>Festival uplift</b><output id="o-uplift"></output></span><input type="range" id="sim-uplift" min="0" max="60" step="5"><small>Today's calendar says <b id="o-uplift-now"></b>. Diwali stress-test: try 40%.</small></label>
+            <label class="ctrl"><span><b>Demand shock, last 4 weeks</b><output id="o-shock"></output></span><input type="range" id="sim-shock" min="-50" max="80" step="5"><small>A competitor scheme (−) or a viral spike (+). Feeds the 4w and 12w averages.</small></label>
+            <label class="ctrl"><span><b>Count stock on order</b><output id="o-onorder"></output></span>
+              <span class="switch"><input type="checkbox" id="sim-onorder" checked><i></i></span><small>Signed-off assumption. Turn it off to see double-ordering risk.</small></label>
+            <label class="ctrl"><span><b>Supplier delay, weeks</b><output id="o-delay"></output></span><input type="range" id="sim-delay" min="0" max="4" step="1"><small>Weeks of sales that pass before stock lands (reduces stock by expected demand).</small></label>
+          </div>
+          <div class="presets"><span>Scenarios:</span>
+            <button data-p="diwali">🪔 Diwali rush</button><button data-p="slump">📉 Competitor scheme</button><button data-p="delay">🚚 Supplier delay</button><button data-p="calm">🌿 Quiet month</button></div>
+        </div>
+        <div class="stack">
+          <div class="card panel"><div class="ph"><div><h2>Outcome</h2><p>Versus today's real run</p></div></div><div id="sim-kpis"></div></div>
+          <div class="card panel"><div class="ph"><div><h2>Action mix</h2><p>Simulated SKUs per action</p></div></div><div id="sim-mix"></div></div>
+        </div>
+      </div>
+      <div class="card panel"><div class="ph"><div><h2>SKUs whose action changes</h2><p>Sorted by impact. Unchanged SKUs are hidden.</p></div><div id="sim-count" class="pill"></div></div><div id="sim-changes"></div></div>
+    </div>
+
+    <!-- ===== Order planner ===== -->
+    <div class="tabpanel" id="tab-planner" role="tabpanel" hidden>
+      <div class="card panel" style="margin-bottom:16px">
+        <div class="ph"><div><h2>Order planner</h2><p>Pick a SKU, drag the order size, and see where cover lands against its window.</p></div>
+          <label class="search" style="min-width:260px"><span aria-hidden="true" style="color:var(--muted)">▾</span><select id="pl-sku" aria-label="Choose SKU"></select></label></div>
+        <div class="quick" id="pl-quick"></div>
+      </div>
+      <div class="grid-main">
+        <div class="card panel">
+          <div class="ph"><div><h2 id="pl-title">–</h2><p id="pl-sub"></p></div><div id="pl-state"></div></div>
+          <div id="pl-gauge"></div>
+          <label class="ctrl" style="margin-top:18px"><span><b>Order quantity</b><output id="o-qty"></output></span><input type="range" id="pl-qty" min="0" step="1"></label>
+          <div class="presets" id="pl-btns"></div>
+        </div>
+        <div class="stack">
+          <div class="card panel"><div class="ph"><div><h2>Safe order range</h2><p>From the SKU's window and expected demand</p></div></div><div id="pl-range"></div></div>
+          <div class="card panel"><div class="ph"><div><h2>Weeks until stockout</h2><p>If nothing is ordered</p></div></div><div id="pl-runway"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== How the rules decide ===== -->
+    <div class="tabpanel" id="tab-rules" role="tabpanel" hidden>
+      <div class="card panel" style="margin-bottom:16px">
+        <div class="ph"><div><h2>How the rules decide</h2><p>Follow one SKU through Raghav's documented rules, in the exact order the engine applies them.</p></div>
+          <label class="search" style="min-width:260px"><span aria-hidden="true" style="color:var(--muted)">▾</span><select id="rl-sku" aria-label="Choose SKU"></select></label></div>
+        <div class="quick" id="rl-quick"></div>
+      </div>
+      <div class="flow" id="rl-flow"></div>
+    </div>
   </main>
   <footer>Read-only · live data from the copilot's Supabase project through a server-side API · no database key or personal data reaches this page · nothing here places an order</footer>
 </div>
@@ -522,6 +633,200 @@ const closeDrawer = () => document.getElementById("drawer-root").classList.remov
 document.getElementById("drawer-root").addEventListener("click", e => { if (e.target.closest("[data-close]")) closeDrawer(); });
 addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 
+
+/* ================= tabs ================= */
+const TABS = ["overview", "simulator", "planner", "rules"];
+function showTab(name, push = true) {
+  if (!TABS.includes(name)) name = "overview";
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  TABS.forEach(t => document.getElementById("tab-" + t).hidden = t !== name);
+  if (push) history.replaceState(null, "", name === "overview" ? location.pathname : "#" + name);
+  if (DATA) renderTab(name);
+}
+function renderTab(name) {
+  if (name === "overview") renderHealth(DATA);
+  if (name === "simulator") renderSim();
+  if (name === "planner") renderPlanner();
+  if (name === "rules") renderRules();
+}
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showTab(b.dataset.tab); });
+const activeTab = () => document.querySelector("#tabs button[aria-selected=true]").dataset.tab;
+
+/* ================= rules engine (mirror of copilot/engine.py, same order) ================= */
+function evalSku(r, o) {
+  const shock = o.shock || 0;
+  const a4 = (r.avg_4w || 0) * (1 + shock);
+  const a12 = (r.avg_12w || 0) + (4 / 12) * (r.avg_4w || 0) * shock;      // the 12w window contains the last 4 weeks
+  const expected = a12 * (1 + o.uplift);                                   // rule 1: uplift before any check
+  const min = r.window_min, max = r.window_max;                            // rule 2: cover window
+  const stock = Math.max((r.on_hand || 0) + (o.onorder ? (r.on_order || 0) : 0) - (o.delay || 0) * expected, 0);
+  const cover = expected > 0 ? stock / expected : null;                    // rule 3: checks
+  const high = a12 > 0 && a4 > a12 * 1.2;
+  const stockout = cover != null && cover < min, overstock = cover != null && cover > max;
+  const std = r.std_qty || 0;
+  let action = "NO_ACTION", qty = 0, conflict = false;                     // rule 4: combinations
+  if (cover == null) action = "NEEDS_REVIEW";
+  else if (overstock && high) { action = "PAUSE_NEXT_ORDER"; conflict = true; }
+  else if (stockout) { action = "REORDER_NOW"; qty = std * (high ? 1.5 : 1); }
+  else if (overstock) action = "PAUSE_NEXT_ORDER";
+  else if (high) { action = "REORDER_1.5X"; qty = std * 1.5; }
+  qty = Math.ceil(qty);
+  const projected = qty && expected ? (stock + qty) / expected : null;
+  const overshoot = projected != null && projected > max;                  // rule 5: guards
+  return { action, qty, cover, high, stockout, overstock, conflict, overshoot, expected, a4, a12, stock, projected,
+           exception: conflict || overshoot || r.has_exception };
+}
+const todayOpts = () => ({ uplift: (DATA.recommendations[0]?.uplift_pct || 0) / 100, shock: 0, onorder: true, delay: 0 });
+
+/* ================= what-if simulator ================= */
+const sim = { uplift: null, shock: 0, onorder: true, delay: 0 };
+function syncSimInputs() {
+  $("#sim-uplift").value = Math.round(sim.uplift * 100); $("#sim-shock").value = Math.round(sim.shock * 100);
+  $("#sim-onorder").checked = sim.onorder; $("#sim-delay").value = sim.delay;
+}
+function renderSim() {
+  if (sim.uplift == null) { Object.assign(sim, todayOpts()); syncSimInputs(); }
+  $("#o-uplift").textContent = `+${Math.round(sim.uplift * 100)}%`;
+  $("#o-uplift-now").textContent = `+${Math.round(todayOpts().uplift * 100)}% this month`;
+  $("#o-shock").textContent = `${sim.shock > 0 ? "+" : ""}${Math.round(sim.shock * 100)}%`;
+  $("#o-onorder").textContent = sim.onorder ? "On" : "Off";
+  $("#o-delay").textContent = `${sim.delay} wk`;
+  const rows = DATA.recommendations.map(r => ({ r, s: evalSku(r, sim), base: evalSku(r, todayOpts()) }));
+  const units = a => a.reduce((t, x) => t + x, 0);
+  const real = { units: units(rows.map(x => x.base.qty)), reorder: rows.filter(x => x.base.qty > 0).length,
+                 risk: rows.filter(x => x.base.stockout).length, over: rows.filter(x => x.base.overstock).length };
+  const now = { units: units(rows.map(x => x.s.qty)), reorder: rows.filter(x => x.s.qty > 0).length,
+                risk: rows.filter(x => x.s.stockout).length, over: rows.filter(x => x.s.overstock).length };
+  const delta = (a, b, upIsBad = true) => { const d = a - b; if (!d) return `<span class="delta same">no change</span>`;
+    return `<span class="delta ${(d > 0) === upIsBad ? "up" : "down"}">${d > 0 ? "▲ +" : "▼ "}${fmt(d)}</span>`; };
+  const tile = (l, v, d) => `<div class="m"><div class="l">${l}</div><div class="x">${v}${d}</div></div>`;
+  $("#sim-kpis").innerHTML = `<div class="simk">${tile("Units to reorder", fmt(now.units), delta(now.units, real.units, false))}${tile("SKUs to reorder", now.reorder, delta(now.reorder, real.reorder, false))}
+    ${tile("Stockout risk", now.risk, delta(now.risk, real.risk))}${tile("Overstocked", now.over, delta(now.over, real.over))}</div>`;
+  const c = {}; rows.forEach(x => c[x.s.action] = (c[x.s.action] || 0) + 1);
+  hbars($("#sim-mix"), ORDER.filter(a => c[a]).map(a => [A[a], c[a]]), "SKUs");
+  const changed = rows.filter(x => x.s.action !== x.base.action || x.s.qty !== x.base.qty)
+    .sort((a, b) => Math.abs(b.s.qty - b.base.qty) - Math.abs(a.s.qty - a.base.qty));
+  $("#sim-count").textContent = `${changed.length} of ${rows.length} SKUs change`;
+  const aChip = (a, q) => chip(a.startsWith("REORDER") ? "critical" : a === "PAUSE_NEXT_ORDER" ? "serious" : "good", A[a] + (q ? ` · ${fmt(q)}` : ""));
+  $("#sim-changes").innerHTML = changed.length ? changed.map(x => `<div class="chg">
+      <div><span class="sku">${esc(x.r.sku)}</span> <span class="nm">${esc(short(x.r.name, 26))}</span><div style="font-size:12px;color:var(--muted)">cover ${x.base.cover?.toFixed(1)} → <b style="color:var(--ink)">${x.s.cover?.toFixed(1)} wk</b> · window ${x.r.window_min}–${x.r.window_max}${x.s.exception ? " · " + chip("warning", "exception") : ""}</div></div>
+      ${aChip(x.base.action, x.base.qty)}<span class="arrow">→</span>${aChip(x.s.action, x.s.qty)}</div>`).join("")
+    : '<p class="empty">No SKU changes action under this scenario. The current plan holds.</p>';
+}
+const simInput = () => { sim.uplift = +$("#sim-uplift").value / 100; sim.shock = +$("#sim-shock").value / 100; sim.onorder = $("#sim-onorder").checked; sim.delay = +$("#sim-delay").value;
+  document.querySelectorAll("#tab-simulator .presets button").forEach(b => b.classList.remove("on")); renderSim(); };
+["#sim-uplift", "#sim-shock", "#sim-delay"].forEach(s => $(s).addEventListener("input", simInput));
+$("#sim-onorder").addEventListener("change", simInput);
+$("#sim-reset").onclick = () => { Object.assign(sim, todayOpts()); syncSimInputs(); simInput(); };
+const PRESETS = { diwali: { uplift: .4, shock: .3, delay: 0, onorder: true }, slump: { shock: -.35, delay: 0, onorder: true },
+                  delay: { delay: 2, shock: 0, onorder: true }, calm: { uplift: 0, shock: 0, delay: 0, onorder: true } };
+document.querySelectorAll("#tab-simulator .presets button").forEach(b => b.onclick = () => {
+  Object.assign(sim, todayOpts(), PRESETS[b.dataset.p]); syncSimInputs(); renderSim();
+  document.querySelectorAll("#tab-simulator .presets button").forEach(x => x.classList.toggle("on", x === b));
+});
+
+/* ================= order planner ================= */
+let plSku = null;
+function skuOptions(sel) {
+  sel.innerHTML = DATA.recommendations.slice().sort((a, b) => a.sku.localeCompare(b.sku))
+    .map(r => `<option value="${esc(r.sku)}">${esc(r.sku)} · ${esc(short(r.name, 30))}</option>`).join("");
+}
+function quickChips(el, current, onPick) {
+  const risky = DATA.recommendations.filter(r => state(r) !== "inside").sort((a, b) => (a.cover / a.window_min) - (b.cover / b.window_min));
+  el.innerHTML = `<span style="font-size:12px;color:var(--muted);align-self:center">Needs attention:</span>` + risky.map(r => { const st = STATE[state(r)];
+    return `<button class="${r.sku === current ? "on" : ""}" data-sku="${esc(r.sku)}"><span class="sw" style="background:${st[2]};border-radius:50%;width:8px;height:8px"></span>${esc(r.sku)} ${esc(short(r.name, 16))}</button>`; }).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => onPick(b.dataset.sku));
+}
+function renderPlanner(keepQty) {
+  const sel = $("#pl-sku");
+  if (!sel.options.length) { skuOptions(sel); sel.onchange = () => { plSku = sel.value; renderPlanner(); }; }
+  if (!plSku) plSku = (DATA.recommendations.find(r => state(r) === "below") || DATA.recommendations[0])?.sku;
+  sel.value = plSku;
+  quickChips($("#pl-quick"), plSku, s => { plSku = s; renderPlanner(); });
+  const r = DATA.recommendations.find(x => x.sku === plSku); if (!r) return;
+  const exp = r.expected || 0, stock = (r.on_hand || 0) + (r.on_order || 0);
+  const minQ = Math.max(0, Math.ceil(r.window_min * exp - stock)), maxQ = Math.max(0, Math.floor(r.window_max * exp - stock));
+  const midQ = Math.max(0, Math.round(((r.window_min + r.window_max) / 2 * exp - stock) / 10) * 10);
+  const approved = r.decision && r.decision !== "reject" ? r.final_qty : null;
+  const sliderMax = Math.max(100, Math.ceil(Math.max(maxQ * 1.4, (r.std_qty || 0) * 3, r.qty * 1.5) / 50) * 50);
+  const q = $("#pl-qty"); q.max = sliderMax;
+  if (!keepQty) q.value = approved ?? r.qty ?? 0;
+  const qty = +q.value, after = exp ? (stock + qty) / exp : null;
+  const afterState = after == null ? "none" : after < r.window_min ? "below" : after > r.window_max ? "above" : "inside";
+  $("#o-qty").textContent = `${fmt(qty)} units`;
+  $("#pl-title").textContent = `${r.sku} · ${(r.name || "").replace("Freshroots ", "")}`;
+  $("#pl-sub").textContent = `${r.perishability === "High" ? "High" : "Low"} perishability · window ${r.window_min}–${r.window_max} weeks · expected ${fmt(exp)} units/week (incl. +${r.uplift_pct || 0}% uplift)`;
+  $("#pl-state").innerHTML = chip(STATE[afterState][0], "After order: " + STATE[afterState][1]);
+  // gauge
+  const W = Math.max($("#pl-gauge").clientWidth || 600, 280), H = 120, L = 14, R = 14, max = Math.max(r.window_max * 1.8, after || 0, r.cover || 0) * 1.05;
+  const x = v => L + (W - L - R) * Math.min(v, max) / max, cy = 56;
+  let ticks = ""; const step = max > 20 ? 4 : max > 8 ? 2 : 1;
+  for (let t = 0; t <= max; t += step) ticks += `<line x1="${x(t)}" x2="${x(t)}" y1="${cy + 22}" y2="${cy + 28}" stroke="var(--axis)"/><text x="${x(t)}" y="${cy + 42}" text-anchor="middle" font-size="11" fill="var(--muted)">${t}</text>`;
+  $("#pl-gauge").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" style="max-width:100%;display:block" role="img" aria-label="Cover before and after the order">
+    <rect x="${L}" y="${cy - 14}" width="${W - L - R}" height="28" rx="14" fill="var(--surface-2)" stroke="var(--line)"/>
+    <rect x="${x(r.window_min)}" y="${cy - 14}" width="${x(r.window_max) - x(r.window_min)}" height="28" fill="var(--good-wash)"/>
+    <text x="${(x(r.window_min) + x(r.window_max)) / 2}" y="${cy - 22}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--good-text)">target window ${r.window_min}–${r.window_max} wk</text>
+    <rect x="${L}" y="${cy - 6}" width="${Math.max(x(r.cover || 0) - L, 0)}" height="12" rx="6" fill="var(--axis)"/>
+    ${after != null ? `<rect x="${x(r.cover || 0)}" y="${cy - 6}" width="${Math.max(x(after) - x(r.cover || 0), 0)}" height="12" rx="6" fill="var(--s1)" style="transition:width .2s"/>` : ""}
+    <circle cx="${x(r.cover || 0)}" cy="${cy}" r="7" fill="${STATE[state(r)][2]}" stroke="var(--surface)" stroke-width="2"/>
+    ${after != null ? `<circle cx="${x(after)}" cy="${cy}" r="9" fill="var(--surface)" stroke="var(--s1)" stroke-width="3"/>
+      <text x="${x(after)}" y="${cy + 4}" text-anchor="middle" font-size="9" font-weight="800" fill="var(--s1)"></text>` : ""}
+    ${ticks}</svg>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px"><span>Weeks of cover · now <b>${r.cover} wk</b></span><span>After ordering ${fmt(qty)}: <b style="color:var(--s1)">${after?.toFixed(1)} wk</b></span></div>`;
+  const btn = (l, v) => `<button data-v="${v}" class="${+v === qty ? "on" : ""}">${l} · ${fmt(v)}</button>`;
+  $("#pl-btns").innerHTML = `<span>Jump to:</span>${btn("Engine", r.qty || 0)}${approved != null ? btn("Approved", approved) : ""}${btn("Minimum safe", minQ)}${btn("Mid-window", midQ)}${btn("Nothing", 0)}`;
+  $("#pl-btns").querySelectorAll("button").forEach(b => b.onclick = () => { q.value = b.dataset.v; renderPlanner(true); });
+  // range + runway
+  $("#pl-range").innerHTML = `<div class="simk">
+      <div class="m"><div class="l">Minimum to reach window</div><div class="x">${fmt(minQ)}</div></div>
+      <div class="m"><div class="l">Maximum before overstock</div><div class="x">${fmt(maxQ)}</div></div>
+      <div class="m"><div class="l">Engine recommends</div><div class="x">${fmt(r.qty)}</div></div>
+      <div class="m"><div class="l">Standard order qty</div><div class="x">${fmt(r.std_qty)}</div></div></div>
+    <p style="font-size:12.5px;color:var(--ink-2);margin:12px 0 0">${r.qty && r.qty < minQ ? `⚠️ The engine's ${fmt(r.qty)} units (standard quantity${r.qty > (r.std_qty || 0) ? " × 1.5" : ""}) is below the ${fmt(minQ)} needed to reach the window, so this SKU will be flagged again next run. Raghav can override.` : r.qty > maxQ ? "⚠️ The engine's quantity would overshoot the window, so it goes to the exception queue." : "The engine's quantity lands inside the safe range."}</p>`;
+  const weeks = exp ? stock / exp : null, date = weeks != null ? new Date(Date.now() + weeks * 7 * 864e5) : null;
+  const pct = weeks != null ? Math.min(100, 100 * weeks / Math.max(r.window_max, weeks)) : 0;
+  $("#pl-runway").innerHTML = `<div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:34px;font-weight:800;letter-spacing:-.02em">${weeks?.toFixed(1) ?? "–"}</span><span style="color:var(--muted)">weeks</span></div>
+    <div style="height:10px;background:var(--band);border-radius:5px;overflow:hidden;margin:10px 0"><div style="height:100%;width:${pct}%;background:${STATE[state(r)][2]}"></div></div>
+    <div style="font-size:12.5px;color:var(--ink-2)">At ${fmt(exp)} units/week, current stock${r.on_order ? " incl. on-order" : ""} runs out around <b>${date ? date.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "–"}</b>.</div>`;
+}
+$("#pl-qty").addEventListener("input", () => renderPlanner(true));
+
+/* ================= how the rules decide ================= */
+let rlSku = null;
+function renderRules() {
+  const sel = $("#rl-sku");
+  if (!sel.options.length) { skuOptions(sel); sel.onchange = () => { rlSku = sel.value; renderRules(); }; }
+  if (!rlSku) rlSku = (DATA.recommendations.find(r => r.action === "REORDER_NOW" && r.change_pct > 20) || DATA.recommendations[0])?.sku;
+  sel.value = rlSku;
+  quickChips($("#rl-quick"), rlSku, s => { rlSku = s; renderRules(); });
+  const r = DATA.recommendations.find(x => x.sku === rlSku); if (!r) return;
+  const e = evalSku(r, todayOpts()), up = r.uplift_pct || 0, chg = r.change_pct ?? 0;
+  const perish = r.perishability === "High";
+  const steps = [
+    { t: "Festival uplift", hit: up > 0, d: up > 0 ? "This month is a festival month in the calendar, so expected demand is raised before any check." : "Not a festival month, so demand is used as is.",
+      c: `<code>12-week avg ${fmt(r.avg_12w)}</code> × <code>${(1 + up / 100).toFixed(2)}</code> = <code>expected ${fmt(e.expected.toFixed(1))}/wk</code>` },
+    { t: "Pick the cover window", hit: perish, d: perish ? "High-perishability SKU, so it gets the tight 3–4 week window." : "Normal SKU, so it gets the 6–14 week window.",
+      c: `<code>window ${r.window_min}–${r.window_max} weeks</code>` },
+    { t: "Run the checks", hit: e.stockout || e.overstock || e.high, d: "Cover = stock ÷ expected demand. Below the window means stockout risk, above it means overstock. 4-week avg more than 20% above 12-week avg means high demand.",
+      c: `<code>(${fmt(r.on_hand)} on hand + ${fmt(r.on_order)} on order) ÷ ${fmt(e.expected.toFixed(1))} = ${e.cover?.toFixed(1)} wk</code>
+          ${chip(e.stockout ? "critical" : e.overstock ? "serious" : "good", e.stockout ? "below window" : e.overstock ? "above window" : "inside window")}
+          <code>4w ${fmt(r.avg_4w)} vs 12w ${fmt(r.avg_12w)} = ${chg > 0 ? "+" : ""}${chg}%</code>${chip(e.high ? "warning" : "good", e.high ? "high demand" : "normal demand")}` },
+    { t: "Combine", hit: true, d: e.conflict ? "Overstock and high demand at once is a conflict, so it goes to Raghav." : e.stockout && e.high ? "Stockout risk and high demand: reorder now at 1.5× the standard quantity." : e.stockout ? "Stockout risk: reorder now at the standard quantity." : e.overstock ? "Overstock: pause the next order." : e.high ? "High demand alone: reorder at 1.5× standard." : "Nothing fired: no change to the normal order.",
+      c: `${chip(e.action.startsWith("REORDER") ? "critical" : e.action === "PAUSE_NEXT_ORDER" ? "serious" : "good", A[e.action])}${e.qty ? `<code>${fmt(r.std_qty)} standard${e.high && e.stockout ? " × 1.5" : e.action === "REORDER_1.5X" ? " × 1.5" : ""} = ${fmt(e.qty)} units</code>` : ""}` },
+    { t: "Exception guards", hit: r.route === "EXCEPTION_QUEUE", d: r.route === "EXCEPTION_QUEUE" ? "A guard fired, so this goes to Raghav's exception queue." : "No guard fired (history, sales, distributor drop, overshoot, defaults), so it goes to the approve queue.",
+      c: e.projected ? `<code>after order: (${fmt(e.stock)} + ${fmt(e.qty)}) ÷ ${fmt(e.expected.toFixed(1))} = ${e.projected.toFixed(1)} wk</code>${chip(e.overshoot ? "warning" : "good", e.overshoot ? "overshoots max" : "within max")}` : `<code>no order, nothing to overshoot</code>` },
+  ];
+  const decL = r.decision ? DEC[r.decision][1] + (r.final_qty != null ? ` · ${fmt(r.final_qty)}` : "") : "Pending";
+  $("#rl-flow").innerHTML = steps.map((s, i) => `<div class="rstep ${s.hit ? "hit" : ""}">
+      <div class="rail"><div class="num">${i + 1}</div><div class="line"></div></div>
+      <div class="body"><div class="card"><h3>${s.t} ${s.hit ? chip("plain", "fired") : ""}</h3><p>${s.d}</p><div class="calc">${s.c}</div></div></div></div>`).join("")
+    + `<div class="rstep"><div class="rail"><div class="num" style="background:var(--brand-2);border-color:var(--brand-2);color:#fff">✓</div></div>
+      <div class="body"><div class="verdict"><div><div style="font-size:12px;opacity:.75;text-transform:uppercase;letter-spacing:.06em">Engine verdict</div>
+        <div class="vbig">${A[r.action]}${r.qty ? ` · ${fmt(r.qty)} units` : ""}</div>
+        <div style="font-size:13px;opacity:.85">${r.route === "EXCEPTION_QUEUE" ? "Exception queue" : "Approve queue"} · Raghav: ${esc(decL)}</div></div></div></div></div>`;
+}
+let rt2; addEventListener("resize", () => { clearTimeout(rt2); rt2 = setTimeout(() => { if (DATA && activeTab() === "planner") renderPlanner(true); }, 150); });
+
 async function load() {
   $("#live").classList.remove("stale");
   try {
@@ -530,6 +835,7 @@ async function load() {
     DATA = d;
     renderHero(d); renderPipeline(d); renderAlerts(d); renderKpis(d); renderHealth(d); renderDecisions(d);
     renderActions(d); renderRegions(d); renderZoho(d); renderBacktest(d); renderRuns(d); renderTable(d);
+    if (activeTab() !== "overview") renderTab(activeTab());
     $("#updated").textContent = `Live · ${when(d.generated_at)}`;
   } catch (e) {
     $("#live").classList.add("stale"); $("#updated").textContent = "Live data unavailable";
@@ -538,6 +844,7 @@ async function load() {
 }
 $("#refresh").onclick = load;
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => DATA && renderHealth(DATA), 150); });
+showTab(location.hash.slice(1), false);
 load(); setInterval(load, 5 * 60 * 1000);
 </script>
 </body>
