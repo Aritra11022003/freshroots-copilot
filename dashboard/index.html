@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freshroots Ops Dashboard</title>
+<meta name="description" content="Live replenishment status for Freshroots: what the rules engine recommends, what Raghav has decided, and what has gone to Zoho as draft purchase orders.">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --band: #f0efec;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --undecided: #c3c2b7;
+    --good: #0ca30c; --good-text: #006300; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --band: #383835;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --undecided: #52514e; --good-text: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --band: #383835;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --undecided: #52514e; --good-text: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.45 var(--font); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+  h1 { font-size: 24px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 4px 0 0; }
+  .meta { color: var(--muted); font-size: 13px; text-align: right; }
+  .meta a { color: var(--ink-2); }
+  button.ghost { font: inherit; font-size: 13px; color: var(--ink-2); background: none; border: 1px solid var(--ring); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  button.ghost:hover { background: var(--band); }
+  .alerts { display: grid; gap: 8px; margin: 0 0 16px; }
+  .alert { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 14px; }
+  .alert .ic { font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 12px; flex: none; margin-top: 1px; }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px; }
+  .grid { display: grid; gap: 16px; }
+  .top { grid-template-columns: 1.3fr 2fr; margin-bottom: 16px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .tile .label, .card h2 { font-size: 13px; color: var(--ink-2); font-weight: 500; margin: 0 0 6px; }
+  .card h2 { font-size: 15px; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+  .card .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .tile .value { font-size: 28px; font-weight: 600; }
+  .tile .note { color: var(--muted); font-size: 12px; }
+  .hero .value { font-size: 56px; font-weight: 650; line-height: 1.05; letter-spacing: -0.02em; }
+  .hero .note { font-size: 14px; color: var(--ink-2); }
+  .two { grid-template-columns: 2fr 1fr; margin-bottom: 16px; }
+  .three { grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px; }
+  svg text { font-family: var(--font); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 1px 8px 1px 6px; border-radius: 999px; border: 1px solid var(--ring); white-space: nowrap; color: var(--ink); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--grid); padding: 6px 8px; white-space: nowrap; }
+  td { border-bottom: 1px solid var(--grid); padding: 7px 8px; vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tablewrap { overflow-x: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; }
+  #tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--ring); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; z-index: 9; max-width: 260px; }
+  #tip b { font-weight: 600; }
+  .empty { color: var(--muted); font-size: 14px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+  @media (max-width: 900px) {
+    .top, .two, .three { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .meta { text-align: left; }
+    .meta > div { justify-content: flex-start !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Freshroots replenishment: ops dashboard</h1>
+      <p class="sub">What the rules engine recommends, what Raghav has decided, and what has gone to Zoho as draft POs.</p>
+    </div>
+    <div class="meta">
+      <div id="updated">Loading live data…</div>
+      <div style="margin-top:6px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap">
+        <button class="ghost" id="refresh">Refresh</button>
+        <button class="ghost" id="theme">Theme</button>
+      </div>
+      <div style="margin-top:6px"><a href="https://github.com/Aritra11022003/freshroots-copilot" target="_blank" rel="noopener">GitHub</a></div>
+    </div>
+  </header>
+
+  <div class="alerts" id="alerts"></div>
+
+  <section class="grid top">
+    <div class="card hero">
+      <div class="tile">
+        <div class="label">Units to reorder this run</div>
+        <div class="value" id="hero">–</div>
+        <div class="note" id="hero-note"></div>
+      </div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <h2>Weeks of cover against each SKU's target window</h2>
+      <p class="hint">Bar = stock ÷ expected weekly demand (festival uplift applied). Grey band = the SKU's window (3–4 weeks perishable, 6–14 weeks otherwise).</p>
+      <div id="cover"></div>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="card">
+        <h2>Recommended actions</h2>
+        <p class="hint">SKUs per action in the latest run.</p>
+        <div id="actions"></div>
+      </div>
+      <div class="card">
+        <h2>Raghav's decisions</h2>
+        <p class="hint">Latest decision per SKU, this run.</p>
+        <div id="decisions"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid three">
+    <div class="card">
+      <h2>Zoho draft POs</h2>
+      <p class="hint">Drafts only. Procurement issues them in Zoho.</p>
+      <div id="zoho"></div>
+    </div>
+    <div class="card">
+      <h2>Backtest kill gate</h2>
+      <p class="hint">Does the engine match Raghav's past calls ≥ 80%?</p>
+      <div id="backtest"></div>
+    </div>
+    <div class="card">
+      <h2>Recent runs</h2>
+      <p class="hint">Mon & Thu 07:00 IST, plus manual runs.</p>
+      <div id="runs"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>All SKUs, latest run</h2>
+    <p class="hint">The full table behind the charts.</p>
+    <div class="tablewrap" id="table"></div>
+  </section>
+
+  <footer>Read-only. Data comes from the copilot's Supabase project through a server-side API; this page never sees a database key. Nothing here places an order.</footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmt = n => n == null ? "–" : Number(n).toLocaleString("en-IN");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ACTION_LABEL = {"REORDER_NOW":"Reorder now","REORDER_1.5X":"Reorder 1.5×","PAUSE_NEXT_ORDER":"Pause next order","NO_ACTION":"No action","NEEDS_REVIEW":"Needs review"};
+const ACTION_ORDER = ["REORDER_NOW","REORDER_1.5X","PAUSE_NEXT_ORDER","NO_ACTION","NEEDS_REVIEW"];
+const STATUS = {good:["var(--good)","✓"], warning:["var(--warning)","!"], serious:["var(--serious)","!"], critical:["var(--critical)","×"]};
+const chip = (kind, text) => `<span class="chip"><span class="dot" style="background:${STATUS[kind][0]}"></span>${esc(text)}</span>`;
+const short = (name, n) => { const s = (name || "").replace("Freshroots ", ""); if (s.length <= n) return s;
+  const cut = s.slice(0, n); return cut.slice(0, cut.lastIndexOf(" ") > 8 ? cut.lastIndexOf(" ") : n) + "…"; };
+const when = iso => iso ? new Date(iso).toLocaleString("en-IN", {dateStyle:"medium", timeStyle:"short"}) : "–";
+
+// theme toggle (per-viewer convenience only)
+try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("#theme").onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark"
+             : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", document.documentElement.dataset.theme); } catch (e) {}
+};
+
+// tooltip
+const tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(e); }
+function moveTip(e) {
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+function bindTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.addEventListener("mouseenter", e => showTip(e, el.dataset.tip));
+    el.addEventListener("mousemove", moveTip);
+    el.addEventListener("mouseleave", hideTip);
+  });
+}
+
+function tile(label, value, note) {
+  return `<div class="card tile"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="note">${note || ""}</div></div>`;
+}
+
+function renderAlerts(d) {
+  const a = [];
+  const any = d.latest_any_run, ok = d.latest_run;
+  if (any && any.status !== "ok") a.push(["critical", `Latest run #${any.id} (${any.run_date}) was <b>${esc(any.status)}</b>` + (d.blocked_gaps ? ` with ${d.blocked_gaps} data gap(s)` : "") + `. Showing the last successful run.`]);
+  if (d.assumptions.signed < d.assumptions.total) a.push(["warning", `Unsigned assumptions (${d.assumptions.signed}/${d.assumptions.total}): <b>not for procurement</b>.`]);
+  if (!ok) a.push(["warning", "No successful run yet."]);
+  $("#alerts").innerHTML = a.map(([k, t]) => `<div class="alert" role="status"><span class="ic" style="background:${STATUS[k][0]}">${STATUS[k][1]}</span><div>${t}</div></div>`).join("");
+}
+
+function renderTiles(d) {
+  const s = d.summary, dec = s.decisions, decided = dec.approve + dec.override + dec.reject;
+  $("#hero").textContent = fmt(s.reorder_units);
+  $("#hero-note").textContent = `across ${s.reorder_skus} of ${s.skus} SKUs · run #${d.latest_run?.id ?? "–"} (${d.latest_run?.run_date ?? "–"})`;
+  const sent = (d.zoho.pushes || []).filter(p => p.status === "created").length;
+  $("#tiles").innerHTML = [
+    tile("SKUs to pause", s.pause_skus, "above max cover"),
+    tile("Exceptions for Raghav", s.exceptions, "need judgment"),
+    tile("Decisions made", `${decided}<span style="font-size:16px;color:var(--muted)"> / ${s.skus}</span>`, `${dec.override} override(s)`),
+    tile("Assumptions signed", `${d.assumptions.signed}<span style="font-size:16px;color:var(--muted)"> / ${d.assumptions.total}</span>`, d.assumptions.signed === d.assumptions.total ? "procurement can export" : "export blocked"),
+    tile("Draft POs created", sent, "in Zoho, all runs"),
+    tile("On-order source", d.latest_run?.on_order_source?.startsWith("Zoho") ? "Zoho" : "None", d.zoho.last_sync ? `synced ${when(d.zoho.last_sync)}` : "no feed"),
+  ].join("");
+}
+
+// Cover vs window: one series (bars) + a grey reference band per SKU.
+function renderCover(d) {
+  const rows = d.recommendations.filter(r => r.cover != null).sort((a, b) => (a.cover / a.window_min) - (b.cover / b.window_min));
+  if (!rows.length) { $("#cover").innerHTML = '<p class="empty">No run yet.</p>'; return; }
+  const W = Math.max($("#cover").clientWidth || 640, 300), wide = W >= 520;
+  const rowH = 26, top = 8, left = wide ? 210 : 64, right = 40, H = top + rows.length * rowH + 24;
+  const max = Math.ceil(Math.max(...rows.map(r => Math.max(r.cover, r.window_max))) / 2) * 2;
+  const x = v => left + (W - left - right) * v / max;
+  let g = "";
+  for (let t = 0; t <= max; t += max > 16 ? 4 : 2) g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${H - 22}" stroke="var(--grid)"/><text x="${x(t)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--muted)">${t}</text>`;
+  rows.forEach((r, i) => {
+    const y = top + i * rowH, bh = 14, by = y + (rowH - bh) / 2, w = Math.max(x(r.cover) - left, 2);
+    const state = r.cover < r.window_min ? "below window" : r.cover > r.window_max ? "above window" : "inside window";
+    const t = `<b>${esc(r.sku)}</b> ${esc(r.name)}<br>Cover ${r.cover} wk · window ${r.window_min}–${r.window_max} wk (${state})<br>${ACTION_LABEL[r.action]}${r.qty ? `: ${fmt(r.qty)} units` : ""}`;
+    g += `<g data-tip="${esc(t)}">
+      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
+      <rect x="${x(r.window_min)}" y="${y + 3}" width="${x(r.window_max) - x(r.window_min)}" height="${rowH - 6}" rx="3" fill="var(--band)"/>
+      <path d="M${left},${by} h${Math.max(w - 4, 0)} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h-${Math.max(w - 4, 0)} z" fill="var(--s1)"/>
+      <text x="${left - 10}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="12" fill="var(--ink)">${esc(r.sku)}${wide ? ` <tspan fill="var(--muted)">${esc(short(r.name, 20))}</tspan>` : ""}</text>
+      <text x="${x(r.cover) + 6}" y="${y + rowH / 2 + 4}" font-size="11" fill="var(--ink-2)">${r.cover}</text>
+    </g>`;
+  });
+  g += `<line x1="${left}" x2="${left}" y1="${top}" y2="${H - 22}" stroke="var(--axis)"/>`;
+  $("#cover").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" style="max-width:100%" role="img" aria-label="Weeks of cover per SKU against its target window">${g}</svg>
+    <div class="legend"><span><span class="sw" style="background:var(--s1)"></span>Weeks of cover</span><span><span class="sw" style="background:var(--band)"></span>Target window</span><span style="color:var(--muted)">Sorted from most at risk</span></div>`;
+  bindTips($("#cover"));
+}
+
+// Actions: one series, horizontal bars, value at the tip.
+function renderActions(d) {
+  const counts = {}; d.recommendations.forEach(r => counts[r.action] = (counts[r.action] || 0) + 1);
+  const rows = ACTION_ORDER.filter(a => counts[a]).map(a => [a, counts[a]]);
+  if (!rows.length) { $("#actions").innerHTML = '<p class="empty">No run yet.</p>'; return; }
+  const W = 340, rowH = 30, left = 118, right = 30, H = rows.length * rowH + 4, max = Math.max(...rows.map(r => r[1]));
+  const x = v => (W - left - right) * v / max;
+  let g = "";
+  rows.forEach(([a, n], i) => {
+    const y = i * rowH, bh = 16, by = y + (rowH - bh) / 2, w = Math.max(x(n), 4);
+    g += `<g data-tip="<b>${ACTION_LABEL[a]}</b><br>${n} SKU${n > 1 ? "s" : ""}">
+      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
+      <text x="${left - 10}" y="${y + rowH / 2 + 4}" text-anchor="end" font-size="12" fill="var(--ink)">${ACTION_LABEL[a]}</text>
+      <path d="M${left},${by} h${w - 4} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h-${w - 4} z" fill="var(--s1)"/>
+      <text x="${left + w + 6}" y="${y + rowH / 2 + 4}" font-size="12" fill="var(--ink-2)">${n}</text></g>`;
+  });
+  $("#actions").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="SKUs per recommended action">${g}</svg>`;
+  bindTips($("#actions"));
+}
+
+// Decisions: one stacked bar, 3 categorical slots + neutral grey, 2px surface gaps, legend.
+function renderDecisions(d) {
+  const dec = d.summary.decisions, total = d.summary.skus;
+  if (!total) { $("#decisions").innerHTML = '<p class="empty">No run yet.</p>'; return; }
+  const parts = [["approve","Approved","var(--s1)"],["override","Overridden","var(--s2)"],["reject","Rejected","var(--s3)"],["undecided","Undecided","var(--undecided)"]];
+  const W = 340, H = 22; let x = 0, g = "";
+  const segs = parts.filter(p => dec[p[0]] > 0);
+  segs.forEach(([k, label, c], i) => {
+    const w = W * dec[k] / total - (i < segs.length - 1 ? 2 : 0);
+    const rx = 4;
+    g += `<rect data-tip="<b>${label}</b><br>${dec[k]} of ${total} SKUs" x="${x}" y="0" width="${Math.max(w, 1)}" height="${H}" rx="${rx}" fill="${c}"/>`;
+    x += w + 2;
+  });
+  $("#decisions").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Decision progress">${g}</svg>
+    <div class="legend">${parts.map(([k, l, c]) => `<span><span class="sw" style="background:${c}"></span>${l} <b style="color:var(--ink)">${dec[k]}</b></span>`).join("")}</div>`;
+  bindTips($("#decisions"));
+}
+
+function renderZoho(d) {
+  const p = d.zoho.pushes || [];
+  const head = `<dl class="kv"><dt>On-order sync</dt><dd>${d.zoho.last_sync ? when(d.zoho.last_sync) : "not synced"}</dd><dt>SKUs on order</dt><dd>${d.zoho.skus_with_on_order}</dd></dl>`;
+  if (!p.length) { $("#zoho").innerHTML = head + '<p class="empty" style="margin-top:12px">No draft POs sent from the live app yet.</p>'; return; }
+  const kind = {created:"good", skipped:"warning", failed:"critical"};
+  $("#zoho").innerHTML = head + `<table style="margin-top:12px"><tr><th>PO</th><th>Reference</th><th class="num">Units</th><th>Result</th></tr>` +
+    p.slice(0, 6).map(x => `<tr><td>${esc(x.zoho_po_number || "–")}</td><td>${esc(x.reference_number)}</td><td class="num">${fmt(x.total_qty)}</td><td>${chip(kind[x.status], x.status)}</td></tr>`).join("") + `</table>`;
+}
+
+function renderBacktest(d) {
+  const b = d.backtest;
+  if (!b) { $("#backtest").innerHTML = '<p class="empty">No backtest yet.</p>'; return; }
+  const kind = b.gate_status === "PASS" ? "good" : b.gate_status === "FAIL" ? "critical" : "warning";
+  const label = b.gate_status === "NOT_EVALUABLE" ? "Not evaluable" : b.gate_status;
+  $("#backtest").innerHTML = `<div style="margin-bottom:10px">${chip(kind, label)}</div>
+    <p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">${esc(b.gate_message || "")}</p>
+    <dl class="kv"><dt>Weeks replayed</dt><dd>${b.decision_weeks}</dd><dt>Avg flip rate</dt><dd>${Math.round((b.avg_flip_rate || 0) * 100)}% week to week</dd>
+    <dt>Confidence</dt><dd>${b.low_confidence ? "Low (short history)" : "OK"}</dd><dt>Ran</dt><dd>${when(b.ran_at)}</dd></dl>`;
+}
+
+function renderRuns(d) {
+  if (!d.runs.length) { $("#runs").innerHTML = '<p class="empty">No runs yet.</p>'; return; }
+  const kind = {ok:"good", blocked:"warning", error:"critical"};
+  $("#runs").innerHTML = `<table><tr><th>Run</th><th>Date</th><th>By</th><th>Status</th></tr>` +
+    d.runs.slice(0, 7).map(r => `<tr><td>#${r.id}</td><td>${esc(r.run_date)}</td><td>${esc(r.triggered_by)}</td><td>${chip(kind[r.status], r.status)}</td></tr>`).join("") + `</table>`;
+}
+
+function renderTable(d) {
+  const rows = [...d.recommendations].sort((a, b) => ACTION_ORDER.indexOf(a.action) - ACTION_ORDER.indexOf(b.action) || (a.cover ?? 0) - (b.cover ?? 0));
+  if (!rows.length) { $("#table").innerHTML = '<p class="empty">No run yet.</p>'; return; }
+  const decLabel = {approve:"Approved", override:"Overridden", reject:"Rejected"};
+  $("#table").innerHTML = `<table><tr><th>SKU</th><th>Name</th><th>Region</th><th>Perish.</th><th>Action</th><th class="num">Qty</th><th class="num">Cover (wk)</th><th>Window</th><th class="num">4w vs 12w</th><th class="num">On hand</th><th class="num">On order</th><th>Queue</th><th>Decision</th></tr>` +
+    rows.map(r => `<tr><td>${esc(r.sku)}</td><td>${esc((r.name || "").replace("Freshroots ", ""))}</td><td>${esc(r.region || "–")}</td><td>${esc(r.perishability || "–")}</td>
+      <td>${ACTION_LABEL[r.action] || esc(r.action)}</td><td class="num">${r.qty ? fmt(r.qty) : "–"}</td><td class="num">${r.cover ?? "–"}</td>
+      <td>${r.window_min}–${r.window_max}</td><td class="num">${r.change_pct == null ? "–" : (r.change_pct > 0 ? "+" : "") + r.change_pct + "%"}</td>
+      <td class="num">${fmt(r.on_hand)}</td><td class="num">${fmt(r.on_order)}</td><td>${r.route === "EXCEPTION_QUEUE" ? chip("warning", "Exception") : "Approve"}</td>
+      <td>${r.decision ? esc(decLabel[r.decision]) + (r.decision === "override" ? ` (${fmt(r.final_qty)})` : "") : '<span style="color:var(--muted)">–</span>'}</td></tr>`).join("") + `</table>`;
+}
+
+async function load() {
+  $("#updated").textContent = "Loading live data…";
+  try {
+    const r = await fetch("/api/metrics", {cache: "no-store"});
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.status);
+    last = d; renderAlerts(d); renderTiles(d); renderCover(d); renderActions(d); renderDecisions(d);
+    renderZoho(d); renderBacktest(d); renderRuns(d); renderTable(d);
+    $("#updated").textContent = `Live · updated ${when(d.generated_at)}`;
+  } catch (e) {
+    $("#updated").textContent = "Live data unavailable right now.";
+    $("#alerts").innerHTML = `<div class="alert"><span class="ic" style="background:var(--critical)">×</span><div>Could not load metrics. Try Refresh in a minute.</div></div>`;
+  }
+}
+$("#refresh").onclick = load;
+let last = null, rt;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => last && renderCover(last), 150); });
+load();
+setInterval(load, 5 * 60 * 1000);
+</script>
+</body>
+</html>
