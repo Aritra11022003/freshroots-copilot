@@ -72,7 +72,7 @@ def build_metrics(fetch) -> dict:
         raw = fetch("recommendations", {"run_id": f"eq.{rid}", "order": "id.asc",
                                         "select": "sku,route,action,recommended_qty,on_hand,on_order,avg_4w,avg_12w,"
                                                   "demand_change_pct,festival_uplift_pct,expected_weekly,"
-                                                  "weeks_of_cover,cover_window,exceptions,reason"})
+                                                  "weeks_of_cover,cover_window,exceptions,reason,flags"})
         dec = fetch("decisions", {"run_id": f"eq.{rid}", "order": "id.asc",
                                   "select": "id,sku,decision,final_action,final_qty"})
         latest_dec = {}
@@ -97,6 +97,9 @@ def build_metrics(fetch) -> dict:
                 "change_pct": _num(r.get("demand_change_pct")), "uplift_pct": _num(r.get("festival_uplift_pct")),
                 "cover": _num(r.get("weeks_of_cover")), "window_min": _num(lo), "window_max": _num(hi),
                 "has_exception": bool(r.get("exceptions")),
+                # the engine's own verdicts (weeks_of_cover is stored rounded, so never re-derive these)
+                "stockout": "STOCKOUT_RISK" in str(r.get("flags") or ""),
+                "overstock": "OVERSTOCK_RISK" in str(r.get("flags") or ""),
                 "decision": d["decision"] if d else None,
                 "final_qty": int(d["final_qty"] or 0) if d and d.get("final_qty") is not None else None,
             })
